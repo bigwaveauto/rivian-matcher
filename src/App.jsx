@@ -476,7 +476,7 @@ export default function App(){
   },[]);
 
   useEffect(()=>{
-    const loadInventory=async()=>{
+    const loadData=async()=>{
       setLoadingInventory(true);
       try{
         const{data:inv}=await supabase.from("inventory").select("*").order("id",{ascending:false}).limit(1);
@@ -490,9 +490,15 @@ export default function App(){
           setVehicleColumns(inv[0].columns||[]);
         }
       }catch(e){console.error("Failed to load inventory:",e);}
+      try{
+        const{data:s}=await supabase.from("settings").select("*").limit(1);
+        if(s&&s.length>0&&s[0].values){
+          setSettings(prev=>({...prev,...s[0].values}));
+        }
+      }catch(e){console.error("Failed to load settings:",e);}
       setLoadingInventory(false);
     };
-    loadInventory();
+    loadData();
   },[]);
 
   useEffect(()=>{if(mode==="admin"&&adminLoggedIn)loadAdmin();},[mode,adminLoggedIn]);
@@ -593,7 +599,10 @@ export default function App(){
       {mode==="admin"&&!adminLoggedIn&&<AdminLogin onLogin={()=>{setAdminLoggedIn(true);loadAdmin();}}/>}
       {mode==="admin"&&adminLoggedIn&&<AdminDashboard
         inquiries={adminInquiries} requests={adminRequests}
-        settings={settings} onSettingsChange={setSettings}
+        settings={settings} onSettingsChange={async(ns)=>{
+          setSettings(ns);
+          try{await supabase.from("settings").delete().neq("id",0);await supabase.from("settings").insert([{values:ns}]);}catch(err){console.error(err);}
+        }}
         vehicles={vehicles} vehicleColumns={vehicleColumns} onUpload={handleUpload}
         onDeleteInquiry={async(id,i)=>{if(id)await supabase.from("inquiries").delete().eq("id",id);setAdminInquiries(p=>p.filter((_,j)=>j!==i));}}
         onDeleteRequest={async(id,i)=>{if(id)await supabase.from("requests").delete().eq("id",id);setAdminRequests(p=>p.filter((_,j)=>j!==i));}}
