@@ -465,6 +465,7 @@ export default function App(){
   const [showNotify,setShowNotify]=useState(false);
   const [inquiryTarget,setInquiryTarget]=useState(null);
   const [submitting,setSubmitting]=useState(false);
+  const [loadingInventory,setLoadingInventory]=useState(true);
   const [adminInquiries,setAdminInquiries]=useState([]);
   const [adminRequests,setAdminRequests]=useState([]);
 
@@ -472,6 +473,26 @@ export default function App(){
     const check=()=>setMode(window.location.hash==="#admin"?"admin":"customer");
     check();window.addEventListener("hashchange",check);
     return()=>window.removeEventListener("hashchange",check);
+  },[]);
+
+  useEffect(()=>{
+    const loadInventory=async()=>{
+      setLoadingInventory(true);
+      try{
+        const{data:inv}=await supabase.from("inventory").select("*").order("id",{ascending:false}).limit(1);
+        if(inv&&inv.length>0){
+          const rows=(inv[0].vehicles||[]).filter(v=>{
+            const mmr=parseFloat(v.MMR)||0;
+            const bn=parseFloat(v["Buy Now Price"])||0;
+            return mmr>0||bn>0;
+          });
+          setVehicles(rows);
+          setVehicleColumns(inv[0].columns||[]);
+        }
+      }catch(e){console.error("Failed to load inventory:",e);}
+      setLoadingInventory(false);
+    };
+    loadInventory();
   },[]);
 
   useEffect(()=>{if(mode==="admin"&&adminLoggedIn)loadAdmin();},[mode,adminLoggedIn]);
@@ -486,15 +507,20 @@ export default function App(){
   const handleUpload=useCallback(e=>{
     const file=e.target.files[0];if(!file)return;
     const reader=new FileReader();
-    reader.onload=evt=>{
+    reader.onload=async evt=>{
       const result=Papa.parse(evt.target.result,{header:true,skipEmptyLines:true});
-      const data=result.data.filter(r=>r.Year&&r.Model);
-      setVehicles(data.filter(v => {
-        const mmr = parseFloat(v.MMR) || 0;
-        const bn = parseFloat(v["Buy Now Price"]) || 0;
-        return mmr > 0 || bn > 0;
-      }));
+      const allData=result.data.filter(r=>r.Year&&r.Model);
+      const filtered=allData.filter(v=>{
+        const mmr=parseFloat(v.MMR)||0;
+        const bn=parseFloat(v["Buy Now Price"])||0;
+        return mmr>0||bn>0;
+      });
+      setVehicles(filtered);
       setVehicleColumns(result.meta.fields||[]);
+      try{
+        await supabase.from("inventory").delete().neq("id",0);
+        await supabase.from("inventory").insert([{vehicles:allData,columns:result.meta.fields,uploaded_at:new Date().toISOString()}]);
+      }catch(err){console.error("Failed to save inventory:",err);}
     };
     reader.readAsText(file);
   },[]);
@@ -589,10 +615,14 @@ export default function App(){
           <div style={{maxWidth:1100,margin:"0 auto",padding:"20px 28px"}}>
             {vehicles.length===0?(
               <div style={{background:"#161616",border:"1px solid #222",borderRadius:12,padding:40,textAlign:"center",marginBottom:24}}>
-                <div style={{fontSize:14,color:"#888",marginBottom:14}}>Upload inventory to browse available vehicles</div>
-                <label style={{display:"inline-block",padding:"12px 32px",background:"linear-gradient(135deg,#1a2538,#162030)",border:"1.5px solid #2a3a4a",borderRadius:10,color:"#7a9cb5",fontSize:14,fontWeight:600,cursor:"pointer"}}>
-                  Upload CSV<input type="file" accept=".csv,.tsv,.txt" onChange={handleUpload} style={{display:"none"}}/>
-                </label>
+                {loadingInventory?(
+                  <div style={{fontSize:14,color:"#888"}}>Loading inventory...</div>
+                ):(
+                  <div>
+                    <div style={{fontSize:14,color:"#888",marginBottom:12}}>No vehicles available right now.</div>
+                    <button onClick={()=>setShowNotify(true)} style={{padding:"12px 28px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:10,color:"#e0eadc",fontSize:14,fontWeight:700,cursor:"pointer"}}>Notify Me When Inventory is Available</button>
+                  </div>
+                )}
               </div>
             ):(
               <div style={{display:"grid",gridTemplateColumns:"260px 1fr",gap:24}}>
