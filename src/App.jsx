@@ -36,7 +36,7 @@ const DEFAULT_SETTINGS = {
   costBasis: "MMR",
 };
 
-const CM={"El Cap Granite":"#717171","Forest Green":"#3a5a35","Glacier White":"#d8d8d8","LA Silver":"#a8a8a8","Launch Green":"#4a6a40","Midnight":"#1e1e30","Rivian Blue":"#3a5a8a","Compass Yellow":"#d4b030","Red Canyon":"#7a3020","Limestone":"#b8b0a0","California Dune":"#b8a078","Borealis":"#2a4a3a","Storm Blue":"#3a4a5a","Black Mountain":"#222","Ocean Coast":"#b0b0a8","Forest Edge":"#5a7a50","Slate Sky":"#6a7a8a","Sandstone":"#b8a888"};
+const CM={"El Cap Granite":"#717171","Forest Green":"#3a5a35","Glacier White":"#d8d8d8","LA Silver":"#a8a8a8","Launch Green":"#4a6a40","Midnight":"#1e1e30","Rivian Blue":"#3a5a8a","Compass Yellow":"#d4b030","Red Canyon":"#7a3020","Limestone":"#b8b0a0","California Dune":"#b8a078","Borealis":"#2a4a3a","Storm Blue":"#3a4a5a","Black Mountain":"#222","Ocean Coast":"#b0b0a8","Forest Edge":"#5a7a50","Slate Sky":"#6a7a8a","Sandstone":"#b8a888","Silver":"#a8a8a8","Green":"#3a5a35","Blue":"#3a5a8a","Gray":"#717171","Black":"#222","White":"#d8d8d8","Yellow":"#d4b030","Red":"#7a3020","Beige":"#b8b0a0"};
 
 const adminCss = `
   input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:#2a2a2a;outline:none}
@@ -56,6 +56,27 @@ function calcCosts(v,s){
   return{base,dist,trans,wholesale,retail,mmr,bn};
 }
 
+// Parse Motor and Battery from Trim if not already columns
+const TRIM_MOTORS={"Quad":"Quad","Dual":"Dual","Tri":"Tri"};
+const TRIM_BATTERIES={"Large":"Large","Standard":"Standard","Standard+":"Standard+","Max":"Max","Performance":"Performance"};
+function enrichVehicle(v){
+  if(!v._enriched){
+    v._enriched=true;
+    // Parse motor from trim (e.g. "Quad Large" -> Motor:"Quad", Battery:"Large")
+    if(!v.Motor||!v.Battery){
+      const parts=(v.Trim||"").split(/\\s+/);
+      parts.forEach(function(p){
+        if(!v.Motor&&TRIM_MOTORS[p])v.Motor=p;
+        if(!v.Battery&&TRIM_BATTERIES[p])v.Battery=p;
+      });
+    }
+    // Derive clean trim name (strip motor+battery words)
+    var trimWords=(v.Trim||"").split(/\\s+/).filter(function(w){return!TRIM_MOTORS[w]&&!TRIM_BATTERIES[w]});
+    v._cleanTrim=trimWords.length>0?trimWords.join(" "):v.Trim;
+  }
+  return v;
+}
+
 // ═══════════════════════════════════════════
 // CUSTOMER COMPONENTS (Premium Design)
 // ═══════════════════════════════════════════
@@ -67,7 +88,7 @@ function FilterPills(props){
     <div style={{marginBottom:14}}>
       <div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-        {props.options.map(function(o){var a=props.sel.includes(o);var ct=props.counts?props.counts[o]||0:0;var dim=ct===0&&!a;return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"5px 12px",borderRadius:100,fontSize:12,cursor:dim?"default":"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",fontWeight:a?500:400,border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.5)",opacity:dim?0.3:1,pointerEvents:dim?"none":"auto"}}>{o} <span style={{opacity:0.5,fontSize:10}}>({ct})</span></button>;})}
+        {props.options.map(function(o){var a=props.sel.includes(o);var ct=props.counts?props.counts[o]||0:0;var dim=ct===0&&!a;return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"5px 12px",borderRadius:6,fontSize:12,cursor:dim?"default":"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",fontWeight:a?500:400,border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.5)",opacity:dim?0.3:1,pointerEvents:dim?"none":"auto"}}>{o} <span style={{opacity:0.5,fontSize:10}}>({ct})</span></button>;})}
       </div>
     </div>
   );
@@ -78,7 +99,7 @@ function MiniPills(props){
     <div style={{marginBottom:12}}>
       <div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-        {props.options.map(function(o){var a=props.sel.includes(o);return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"4px 10px",borderRadius:100,fontSize:11,cursor:"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.45)",fontWeight:a?500:400}}>{o}</button>;})}
+        {props.options.map(function(o){var a=props.sel.includes(o);return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"4px 10px",borderRadius:6,fontSize:11,cursor:"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.45)",fontWeight:a?500:400}}>{o}</button>;})}
       </div>
     </div>
   );
@@ -91,8 +112,8 @@ function InquiryModal(props){
   var cinp={width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box"};
   var ok=name.trim()&&phone.trim();
   var ov={position:"fixed",inset:0,background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20};
-  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"40px 36px",maxWidth:440,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>Inquiry Sent</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will be in touch within <strong style={{color:"#58c88a"}}>48 hours</strong>.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
-  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"32px 30px",maxWidth:440,width:"100%"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Details</h3><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}><span style={{fontSize:14,color:"rgba(255,255,255,0.5)"}}>{v.Year} {v.Model} {v.Trim}</span><Dot c={v["Exterior Color"]}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div><div style={{marginBottom:20}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,vehicle:v,retailPrice:props.retail});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:100,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Send Inquiry"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:100,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
+  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 36px",maxWidth:440,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>Inquiry Sent</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will be in touch within <strong style={{color:"#58c88a"}}>48 hours</strong>.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
+  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"32px 30px",maxWidth:440,width:"100%"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Details</h3><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}><span style={{fontSize:14,color:"rgba(255,255,255,0.5)"}}>{v.Year} {v.Model} {v._cleanTrim||v.Trim}</span><Dot c={v["Exterior Color"]}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div><div style={{marginBottom:20}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,vehicle:v,retailPrice:props.retail});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:6,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Send Inquiry"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:6,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
 }
 
 function NotifyModal(props){
@@ -106,8 +127,8 @@ function NotifyModal(props){
   var ok=name.trim()&&phone.trim();
   function tog(arr,setArr,v){setArr(arr.includes(v)?arr.filter(function(x){return x!==v}):[].concat(arr,[v]))}
   var ov={position:"fixed",inset:0,background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20,overflowY:"auto"};
-  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"40px 36px",maxWidth:480,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>You are On the List</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will reach out within <strong style={{color:"#58c88a"}}>48 hours</strong> if we find a match.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
-  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"28px 26px",maxWidth:520,width:"100%",maxHeight:"90vh",overflowY:"auto",margin:"auto"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Notified</h3><p style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginBottom:18}}>Tell us your ideal spec and we will notify you when it arrives.</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div></div><div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><MiniPills label="Year" options={YEARS} sel={fy} onToggle={function(v){tog(fy,sfy,v)}}/><MiniPills label="Model" options={MODELS} sel={fm} onToggle={function(v){tog(fm,sfm,v)}}/><MiniPills label="Motor" options={MOTORS} sel={fmo} onToggle={function(v){tog(fmo,sfmo,v)}}/><MiniPills label="Battery" options={BATTERIES} sel={fb} onToggle={function(v){tog(fb,sfb,v)}}/><MiniPills label="Color" options={COLORS_FULL} sel={fc} onToggle={function(v){tog(fc,sfc,v)}}/><MiniPills label="Interior" options={INTERIORS} sel={fi} onToggle={function(v){tog(fi,sfi,v)}}/><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{bud>=120000?"No limit":"$"+bud.toLocaleString()}</div><input type="range" min={20000} max={120000} step={1000} value={bud} onChange={function(x){sBud(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Mileage</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{mil>=100000?"Any":mil.toLocaleString()+" mi"}</div><input type="range" min={0} max={100000} step={1000} value={mil} onChange={function(x){sMil(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:16}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Notes</div><textarea value={notes} onChange={function(x){setNotes(x.target.value)}} placeholder="Timeline, trade-in info..." rows={2} style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:48}}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,notes:notes,years:fy,models:fm,motors:fmo,batteries:fb,colors:fc,interiors:fi,maxBudget:bud<120000?bud:null,maxMileage:mil<100000?mil:null});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:100,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Notify Me"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:100,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
+  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 36px",maxWidth:480,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>You are On the List</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will reach out within <strong style={{color:"#58c88a"}}>48 hours</strong> if we find a match.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
+  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 26px",maxWidth:520,width:"100%",maxHeight:"90vh",overflowY:"auto",margin:"auto"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Notified</h3><p style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginBottom:18}}>Tell us your ideal spec and we will notify you when it arrives.</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div></div><div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><MiniPills label="Year" options={YEARS} sel={fy} onToggle={function(v){tog(fy,sfy,v)}}/><MiniPills label="Model" options={MODELS} sel={fm} onToggle={function(v){tog(fm,sfm,v)}}/><MiniPills label="Motor" options={MOTORS} sel={fmo} onToggle={function(v){tog(fmo,sfmo,v)}}/><MiniPills label="Battery" options={BATTERIES} sel={fb} onToggle={function(v){tog(fb,sfb,v)}}/><MiniPills label="Color" options={COLORS_FULL} sel={fc} onToggle={function(v){tog(fc,sfc,v)}}/><MiniPills label="Interior" options={INTERIORS} sel={fi} onToggle={function(v){tog(fi,sfi,v)}}/><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{bud>=120000?"No limit":"$"+bud.toLocaleString()}</div><input type="range" min={20000} max={120000} step={1000} value={bud} onChange={function(x){sBud(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Mileage</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{mil>=100000?"Any":mil.toLocaleString()+" mi"}</div><input type="range" min={0} max={100000} step={1000} value={mil} onChange={function(x){sMil(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:16}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Notes</div><textarea value={notes} onChange={function(x){setNotes(x.target.value)}} placeholder="Timeline, trade-in info..." rows={2} style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:48}}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,notes:notes,years:fy,models:fm,motors:fmo,batteries:fb,colors:fc,interiors:fi,maxBudget:bud<120000?bud:null,maxMileage:mil<100000?mil:null});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:6,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Notify Me"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:6,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
 }
 
 // ═══════════════════════════════════════════
@@ -138,9 +159,9 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
           <h1 style={{fontSize:22,fontWeight:300,margin:0,color:"#f0f0f0"}}>Big Wave <span style={{fontWeight:700}}>Auto</span></h1>
         </div>
         <div style={{display:"flex",gap:6}}>
-          <span style={{background:"#1a2518",color:"#6b9c5a",padding:"4px 10px",borderRadius:20,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{inquiries.length} inquiries</span>
-          <span style={{background:"#1a1e25",color:"#5a7c9c",padding:"4px 10px",borderRadius:20,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{requests.length} notify</span>
-          <span style={{background:"#1e1a25",color:"#9c5a9c",padding:"4px 10px",borderRadius:20,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{vehicles.length} vehicles</span>
+          <span style={{background:"#1a2518",color:"#6b9c5a",padding:"4px 10px",borderRadius:12,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{inquiries.length} inquiries</span>
+          <span style={{background:"#1a1e25",color:"#5a7c9c",padding:"4px 10px",borderRadius:12,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{requests.length} notify</span>
+          <span style={{background:"#1e1a25",color:"#9c5a9c",padding:"4px 10px",borderRadius:12,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{vehicles.length} vehicles</span>
         </div>
       </div>
 
@@ -305,7 +326,7 @@ export default function App(){
             const bn=parseFloat(v["Buy Now Price"])||0;
             return mmr>0||bn>0;
           });
-          setVehicles(rows);
+          setVehicles(rows.map(enrichVehicle));
           setVehicleColumns(inv[0].columns||[]);
         }
       }catch(e){console.error("Failed to load inventory:",e);}
@@ -340,7 +361,7 @@ export default function App(){
         const bn=parseFloat(v["Buy Now Price"])||0;
         return mmr>0||bn>0;
       });
-      setVehicles(filtered);
+      setVehicles(filtered.map(enrichVehicle));
       setVehicleColumns(result.meta.fields||[]);
       try{
         await supabase.from("inventory").delete().neq("id",0);
@@ -356,14 +377,15 @@ export default function App(){
 
   const filterOptions=useMemo(()=>{
     const u=k=>[...new Set(vehicles.map(v=>v[k]).filter(Boolean))].sort();
-    return{years:u("Year"),models:u("Model"),trims:u("Trim"),batteries:u("Battery"),motors:u("Motor"),colors:u("Exterior Color")};
+    const cleanTrims=[...new Set(vehicles.map(v=>v._cleanTrim).filter(Boolean))].sort();
+    return{years:u("Year"),models:u("Model"),trims:cleanTrims,batteries:u("Battery"),motors:u("Motor"),colors:u("Exterior Color")};
   },[vehicles]);
 
   const processed=useMemo(()=>{
     let f=vehicles.filter(v=>{
       if(filters.years.length&&!filters.years.includes(v.Year))return false;
       if(filters.models.length&&!filters.models.includes(v.Model))return false;
-      if(filters.trims.length&&!filters.trims.includes(v.Trim))return false;
+      if(filters.trims.length&&!filters.trims.includes(v._cleanTrim))return false;
       if(filters.batteries.length&&!filters.batteries.includes(v.Battery))return false;
       if(filters.motors.length&&!filters.motors.includes(v.Motor))return false;
       if(filters.colors.length&&!filters.colors.includes(v["Exterior Color"]))return false;
@@ -388,7 +410,7 @@ export default function App(){
       const base=vehicles.filter(v=>{
         if(of2.years.length&&!of2.years.includes(v.Year))return false;
         if(of2.models.length&&!of2.models.includes(v.Model))return false;
-        if(of2.trims.length&&!of2.trims.includes(v.Trim))return false;
+        if(of2.trims.length&&!of2.trims.includes(v._cleanTrim))return false;
         if(of2.batteries.length&&!of2.batteries.includes(v.Battery))return false;
         if(of2.motors.length&&!of2.motors.includes(v.Motor))return false;
         if(of2.colors.length&&!of2.colors.includes(v["Exterior Color"]))return false;
@@ -397,7 +419,7 @@ export default function App(){
       const counts={};base.forEach(v=>{const val=v[csvKey];if(val)counts[val]=(counts[val]||0)+1});
       return counts;
     };
-    return{years:c("years","Year"),models:c("models","Model"),trims:c("trims","Trim"),batteries:c("batteries","Battery"),motors:c("motors","Motor"),colors:c("colors","Exterior Color")};
+    return{years:c("years","Year"),models:c("models","Model"),trims:c("trims","_cleanTrim"),batteries:c("batteries","Battery"),motors:c("motors","Motor"),colors:c("colors","Exterior Color")};
   },[vehicles,filters]);
 
   const submitInquiry=async({name,phone,email,vehicle:v,retailPrice})=>{
@@ -440,7 +462,7 @@ export default function App(){
             <div style={{maxWidth:1200,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"baseline",gap:10}}>
                 <h1 style={{fontSize:22,fontWeight:300,letterSpacing:"-0.02em"}}><span style={{fontWeight:600}}>Rivian</span> Inventory</h1>
-                {vehicles.length>0&&<span style={{fontSize:12,fontWeight:500,color:"#58c88a",background:"rgba(72,160,120,0.1)",padding:"3px 10px",borderRadius:100}}>{processed.length} available</span>}
+                {vehicles.length>0&&<span style={{fontSize:12,fontWeight:500,color:"#58c88a",background:"rgba(72,160,120,0.1)",padding:"3px 10px",borderRadius:6}}>{processed.length} available</span>}
               </div>
             </div>
           </div>
@@ -449,11 +471,11 @@ export default function App(){
             {loadingInventory?(
               <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>Loading inventory...</div></div>
             ):vehicles.length===0?(
-              <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles available right now</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
+              <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles available right now</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
             ):(
               <div style={{display:"grid",gridTemplateColumns:"230px 1fr",gap:24}}>
                 <div style={{position:"sticky",top:16,alignSelf:"start"}}>
-                  <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:18}}>
+                  <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8,padding:18}}>
                     <div style={{fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.7)",marginBottom:16}}>Find Your Rivian</div>
                     <FilterPills label="Year" options={filterOptions.years} sel={filters.years} onToggle={function(v){toggle("years",v)}} counts={filterCounts.years}/>
                     <FilterPills label="Model" options={filterOptions.models} sel={filters.models} onToggle={function(v){toggle("models",v)}} counts={filterCounts.models}/>
@@ -463,13 +485,13 @@ export default function App(){
                     <FilterPills label="Color" options={filterOptions.colors} sel={filters.colors} onToggle={function(v){toggle("colors",v)}} counts={filterCounts.colors}/>
                     <div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:14,fontWeight:500,color:"#58c88a",marginBottom:6}}>{maxPrice>=120000?"No limit":"Up to $"+maxPrice.toLocaleString()}</div><input type="range" min={30000} max={120000} step={1000} value={maxPrice} onChange={function(e){setMaxPrice(Number(e.target.value))}} style={{width:"100%"}}/></div>
                     <div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Sort</div><select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{width:"100%",padding:"8px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,color:"rgba(255,255,255,0.6)",fontSize:12,outline:"none",fontFamily:"Outfit,sans-serif"}}><option value="retail_asc">Price: Low to High</option><option value="retail_desc">Price: High to Low</option><option value="miles_asc">Mileage: Low to High</option></select></div>
-                    {hasFilters?<button onClick={function(){setFilters({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]})}} style={{width:"100%",padding:"8px",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:100,color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif",fontWeight:500}}>Clear All Filters</button>:null}
+                    {hasFilters?<button onClick={function(){setFilters({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]})}} style={{width:"100%",padding:"8px",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif",fontWeight:500}}>Clear All Filters</button>:null}
                   </div>
                 </div>
 
                 <div>
                   {processed.length===0?(
-                    <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles match your filters</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
+                    <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles match your filters</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
                   ):(
                     <div>
                       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))",gap:12}}>
@@ -477,28 +499,34 @@ export default function App(){
                           var v=item.vehicle,ret=item.costs.retail,lo=ret-settings.priceRange,hi=ret+settings.priceRange;
                           var mi=v["Odometer Value"]?parseInt(v["Odometer Value"]):null;
                           return(
-                            <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"18px 20px",cursor:"pointer",transition:"all .2s"}}>
-                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
-                                <div style={{fontSize:18,fontWeight:700,color:"#fff",letterSpacing:"-0.01em"}}>{v.Model} {v.Trim}</div>
-                                <div style={{fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.35)"}}>{v.Year}</div>
+                            <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{display:"flex",alignItems:"center",padding:"13px 18px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8,marginBottom:4,cursor:"pointer",transition:"all .15s",gap:16}}>
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:3}}>
+                                  <span style={{fontSize:15,fontWeight:600,color:"#fff"}}>{v.Year} {v.Model}</span>
+                                  <span style={{fontSize:13,fontWeight:400,color:"rgba(255,255,255,0.4)"}}>{v._cleanTrim||v.Trim}</span>
+                                </div>
+                                <div style={{display:"flex",alignItems:"center",gap:8,fontSize:12,color:"rgba(255,255,255,0.35)"}}>
+                                  {mi!==null&&<span>{mi.toLocaleString()} mi</span>}
+                                  {v.Motor&&<><span style={{color:"rgba(255,255,255,0.15)"}}>·</span><span>{v.Motor}-Motor</span></>}
+                                  {v.Battery&&<><span style={{color:"rgba(255,255,255,0.15)"}}>·</span><span>{v.Battery}</span></>}
+                                  <span style={{color:"rgba(255,255,255,0.15)"}}>·</span>
+                                  <span style={{display:"flex",alignItems:"center",gap:4}}><Dot c={v["Exterior Color"]} size={9}/>{v["Exterior Color"]}</span>
+                                  <span style={{color:"rgba(255,255,255,0.15)"}}>/</span>
+                                  <span style={{display:"flex",alignItems:"center",gap:4}}><Dot c={v["Interior Color"]} size={9}/>{v["Interior Color"]}</span>
+                                </div>
                               </div>
-                              <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",marginBottom:4}}>{mi!==null?mi.toLocaleString()+" mi":""}  {mi?" \u00B7 ":""}{v.Motor?v.Motor+"-Motor AWD":""}{v.Battery?" \u00B7 "+v.Battery+" battery":""}</div>
-                              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                                <div style={{display:"flex",alignItems:"center",gap:5}}><Dot c={v["Exterior Color"]} size={11}/><span style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>{v["Exterior Color"]}</span></div>
-                                <span style={{color:"rgba(255,255,255,0.15)"}}>|</span>
-                                <div style={{display:"flex",alignItems:"center",gap:5}}><Dot c={v["Interior Color"]} size={11}/><span style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>{v["Interior Color"]}</span></div>
+                              <div style={{textAlign:"right",flexShrink:0,marginRight:12}}>
+                                <div style={{fontSize:15,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+lo.toLocaleString()+" \u2013 $"+hi.toLocaleString()}</div>
+                                <div style={{fontSize:10,color:"rgba(255,255,255,0.2)",marginTop:1}}>estimated range</div>
                               </div>
-                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:12}}>
-                                <div style={{fontSize:17,fontWeight:700,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+lo.toLocaleString()+" \u2013 $"+hi.toLocaleString()}</div>
-                                <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(72,160,120,0.5)",borderRadius:100,color:"#58c88a",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
-                              </div>
+                              <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(72,160,120,0.4)",borderRadius:6,color:"#58c88a",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
                             </div>
                           );
                         })}
                       </div>
                       <div style={{textAlign:"center",padding:"36px 20px",marginTop:10}}>
                         <div style={{fontSize:14,color:"rgba(255,255,255,0.35)",marginBottom:14}}>Don't see your perfect spec?</div>
-                        <button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button>
+                        <button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button>
                       </div>
                     </div>
                   )}
