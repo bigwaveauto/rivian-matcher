@@ -499,7 +499,7 @@ export default function App(){
                     <div>
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
                         {processed.map(function(item){
-                          var v=item.vehicle,ret=item.costs.retail,lo=Math.round((ret-settings.priceRange)/100)*100,hi=Math.round((ret+settings.priceRange)/100)*100;
+                          var v=item.vehicle,ret=item.costs.retail;
                           var mi=v["Odometer Value"]?parseInt(v["Odometer Value"]):null;
                           return(
                             <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{display:"flex",alignItems:"center",padding:"10px 16px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:6,marginBottom:2,cursor:"pointer",transition:"all .15s",gap:14}}>
@@ -519,8 +519,7 @@ export default function App(){
                                 </div>
                               </div>
                               <div style={{textAlign:"right",flexShrink:0,marginRight:12}}>
-                                <div style={{fontSize:14,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+lo.toLocaleString()+" \u2013 $"+hi.toLocaleString()}</div>
-                                <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",marginTop:1}}>estimated range</div>
+                                <div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontSize:14,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+Math.round(ret/100)*100}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>{"± $"+(settings.priceRange/1000)+"k"}</span></div>
                               </div>
                               <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(72,160,120,0.4)",borderRadius:6,color:"#58c88a",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
                             </div>
