@@ -431,7 +431,10 @@ export default function App(){
 
   const submitNotify=async form=>{
     setSubmitting(true);
-    await supabase.from("requests").insert([{name:form.name,phone:form.phone,email:form.email,notes:form.notes,years:form.years,models:form.models,motors:form.motors,batteries:form.batteries,colors:form.colors,interiors:form.interiors,max_budget:form.maxBudget,max_mileage:form.maxMileage}]);
+    try{
+      const{error}=await supabase.from("requests").insert([{name:form.name,phone:form.phone,email:form.email,notes:form.notes,years:form.years,models:form.models,motors:form.motors,batteries:form.batteries,colors:form.colors,interiors:form.interiors,max_budget:form.maxBudget,max_mileage:form.maxMileage}]);
+      if(error)console.error("Notify insert error:",error);
+    }catch(err){console.error("Notify failed:",err);}
     setSubmitting(false);
   };
 
@@ -461,7 +464,7 @@ export default function App(){
           <div style={{padding:"20px 28px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
             <div style={{maxWidth:1200,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"baseline",gap:10}}>
-                <h1 style={{fontSize:22,fontWeight:300,letterSpacing:"-0.02em"}}><span style={{fontWeight:600}}>Rivian</span> Inventory</h1>
+                <h1 style={{fontSize:22,fontWeight:300,letterSpacing:"-0.02em",margin:0}}>Rivian <span style={{fontStyle:"italic",fontWeight:300,color:"#58c88a"}}>wave</span> <span style={{fontWeight:600}}>report</span></h1>
                 {vehicles.length>0&&<span style={{fontSize:12,fontWeight:500,color:"#58c88a",background:"rgba(72,160,120,0.1)",padding:"3px 10px",borderRadius:6}}>{processed.length} available</span>}
               </div>
             </div>
@@ -496,16 +499,16 @@ export default function App(){
                     <div>
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
                         {processed.map(function(item){
-                          var v=item.vehicle,ret=item.costs.retail,lo=ret-settings.priceRange,hi=ret+settings.priceRange;
+                          var v=item.vehicle,ret=item.costs.retail,lo=Math.round((ret-settings.priceRange)/100)*100,hi=Math.round((ret+settings.priceRange)/100)*100;
                           var mi=v["Odometer Value"]?parseInt(v["Odometer Value"]):null;
                           return(
-                            <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{display:"flex",alignItems:"center",padding:"13px 18px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8,marginBottom:4,cursor:"pointer",transition:"all .15s",gap:16}}>
+                            <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{display:"flex",alignItems:"center",padding:"10px 16px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:6,marginBottom:2,cursor:"pointer",transition:"all .15s",gap:14}}>
                               <div style={{flex:1,minWidth:0}}>
-                                <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:3}}>
-                                  <span style={{fontSize:15,fontWeight:600,color:"#fff"}}>{v.Year} {v.Model}</span>
-                                  <span style={{fontSize:13,fontWeight:400,color:"rgba(255,255,255,0.4)"}}>{v._cleanTrim||v.Trim}</span>
+                                <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:1}}>
+                                  <span style={{fontSize:14,fontWeight:600,color:"#fff"}}>{v.Year} {v.Model}</span>
+                                  <span style={{fontSize:12,fontWeight:400,color:"rgba(255,255,255,0.4)"}}>{v._cleanTrim||v.Trim}</span>
                                 </div>
-                                <div style={{display:"flex",alignItems:"center",gap:8,fontSize:12,color:"rgba(255,255,255,0.35)"}}>
+                                <div style={{display:"flex",alignItems:"center",gap:8,fontSize:11,color:"rgba(255,255,255,0.35)"}}>
                                   {mi!==null&&<span>{mi.toLocaleString()} mi</span>}
                                   {v.Motor&&<><span style={{color:"rgba(255,255,255,0.15)"}}>·</span><span>{v.Motor}-Motor</span></>}
                                   {v.Battery&&<><span style={{color:"rgba(255,255,255,0.15)"}}>·</span><span>{v.Battery}</span></>}
@@ -516,8 +519,8 @@ export default function App(){
                                 </div>
                               </div>
                               <div style={{textAlign:"right",flexShrink:0,marginRight:12}}>
-                                <div style={{fontSize:15,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+lo.toLocaleString()+" \u2013 $"+hi.toLocaleString()}</div>
-                                <div style={{fontSize:10,color:"rgba(255,255,255,0.2)",marginTop:1}}>estimated range</div>
+                                <div style={{fontSize:14,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+lo.toLocaleString()+" \u2013 $"+hi.toLocaleString()}</div>
+                                <div style={{fontSize:9,color:"rgba(255,255,255,0.2)",marginTop:1}}>estimated range</div>
                               </div>
                               <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(72,160,120,0.4)",borderRadius:6,color:"#58c88a",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
                             </div>
