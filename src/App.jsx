@@ -2,16 +2,10 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import * as Papa from "papaparse";
 import { createClient } from "@supabase/supabase-js";
 
-// ═══════════════════════════════════════════
-// SUPABASE — Replace with your values
-// ═══════════════════════════════════════════
 const SUPABASE_URL = "https://nqkwurvdwfvzpueapagr.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_2c9zDnwfZZZlziDs_EAPyQ_zrJOWMB7";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ═══════════════════════════════════════════
-// DISTANCE TABLE (miles from 53089)
-// ═══════════════════════════════════════════
 const DISTANCES = {
   "AZ - Manheim Phoenix":1750,"CA - BURLINGAME":2150,"CA - Manheim Oceanside":2050,
   "CA - Manheim Riverside":2000,"CO - Manheim Denver":1050,"FL - LAKE PARK":1450,
@@ -22,9 +16,6 @@ const DISTANCES = {
   "TX - Manheim Dallas":1050,"TX - PLANO":1060,"WA - Manheim Seattle":2100,
 };
 
-// ═══════════════════════════════════════════
-// RIVIAN OPTIONS (for notify-me form)
-// ═══════════════════════════════════════════
 const YEARS = ["2022","2023","2024","2025","2026"];
 const MODELS = ["R1S","R1T"];
 const MOTORS = ["Dual","Tri","Quad"];
@@ -41,71 +32,23 @@ const DEFAULT_SETTINGS = {
   detailing: 400,
   reconditioning: 500,
   markup: 3000,
-  priceRange: 2500, // +/- shown to customer
+  priceRange: 2500,
   costBasis: "MMR",
 };
 
-const css = `
+const CM={"El Cap Granite":"#717171","Forest Green":"#3a5a35","Glacier White":"#d8d8d8","LA Silver":"#a8a8a8","Launch Green":"#4a6a40","Midnight":"#1e1e30","Rivian Blue":"#3a5a8a","Compass Yellow":"#d4b030","Red Canyon":"#7a3020","Limestone":"#b8b0a0","California Dune":"#b8a078","Borealis":"#2a4a3a","Storm Blue":"#3a4a5a","Black Mountain":"#222","Ocean Coast":"#b0b0a8","Forest Edge":"#5a7a50","Slate Sky":"#6a7a8a","Sandstone":"#b8a888"};
+
+const adminCss = `
   input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:#2a2a2a;outline:none}
   input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#4a6741,#3a5431);border:2px solid #6b9c5a;cursor:pointer}
-  input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#4a6741,#3a5431);border:2px solid #6b9c5a;cursor:pointer}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  .v-card{animation:fadeIn .25s ease both}
 `;
 
 const lb = {display:"block",fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#7a8a6e",marginBottom:5,fontFamily:"'DM Sans',sans-serif"};
 const inp = {width:"100%",padding:"10px 12px",background:"#0f0f0f",border:"1.5px solid #2a2a2a",borderRadius:8,color:"#e0e0e0",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box"};
 
-// ═══════════════════════════════════════════
-// SHARED COMPONENTS
-// ═══════════════════════════════════════════
-function FilterPills({label,options,selected,onChange,counts}){
-  const toggle=o=>onChange(selected.includes(o)?selected.filter(s=>s!==o):[...selected,o]);
-  return(
-    <div style={{marginBottom:14}}>
-      <label style={lb}>{label}</label>
-      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-        {options.map(o=>{
-          const a=selected.includes(o),c=counts?.[o]||0;
-          return <button key={o} onClick={()=>toggle(o)} style={{
-            padding:"4px 10px",borderRadius:6,border:a?"2px solid #4a6741":"1.5px solid #222",
-            background:a?"linear-gradient(135deg,#4a6741,#3a5431)":"rgba(255,255,255,0.02)",
-            color:a?"#e0eadc":c===0?"#444":"#999",fontSize:12,fontWeight:a?600:400,
-            cursor:"pointer",transition:"all .15s",fontFamily:"'DM Sans',sans-serif",
-            opacity:c===0&&!a?.5:1
-          }}>{o} ({c})</button>;
-        })}
-      </div>
-    </div>
-  );
-}
-
-function MultiSelect({label,options,selected,onChange}){
-  const toggle=o=>onChange(selected.includes(o)?selected.filter(s=>s!==o):[...selected,o]);
-  return(
-    <div style={{marginBottom:14}}>
-      <label style={lb}>{label}</label>
-      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-        {options.map(o=>{
-          const a=selected.includes(o);
-          return <button key={o} onClick={()=>toggle(o)} style={{
-            padding:"4px 10px",borderRadius:6,border:a?"2px solid #4a6741":"1.5px solid #222",
-            background:a?"linear-gradient(135deg,#4a6741,#3a5431)":"rgba(255,255,255,0.02)",
-            color:a?"#e0eadc":"#999",fontSize:12,fontWeight:a?600:400,
-            cursor:"pointer",transition:"all .15s",fontFamily:"'DM Sans',sans-serif",
-          }}>{o}</button>;
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════
-// COST CALCULATIONS (internal only)
-// ═══════════════════════════════════════════
 function calcCosts(v,s){
   const mmr=parseFloat(v.MMR)||0, bn=parseFloat(v["Buy Now Price"])||0;
-  const base=s.costBasis==="MMR"?(mmr>0?mmr:(bn>0?bn:0)):(bn>0?bn:mmr);
+  const base=s.costBasis==="MMR"?mmr:(bn>0?bn:mmr);
   const dist=DISTANCES[v["Pickup Location"]]||0;
   const trans=dist*s.transportPerMile;
   const wholesale=base+trans+s.detailing+s.reconditioning;
@@ -114,193 +57,63 @@ function calcCosts(v,s){
 }
 
 // ═══════════════════════════════════════════
-// CUSTOMER VEHICLE CARD (clean — no cost data)
+// CUSTOMER COMPONENTS (Premium Design)
 // ═══════════════════════════════════════════
-function CustomerVehicleCard({vehicle:v,retail,priceRange,index,onInquire}){
-  const low = retail - priceRange;
-  const high = retail + priceRange;
-  const miles = v["Odometer Value"] ? parseInt(v["Odometer Value"]) : null;
 
+function Dot(props){return <div style={{width:props.size||12,height:props.size||12,borderRadius:"50%",background:CM[props.c]||"#555",border:"1.5px solid rgba(255,255,255,0.15)",flexShrink:0}}/>;}
+
+function FilterPills(props){
   return(
-    <div className="v-card" style={{
-      background:"#161616",border:"1px solid #222",borderRadius:10,marginBottom:8,
-      overflow:"hidden",animationDelay:`${index*.04}s`,animationFillMode:"both",
-      padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",
-    }}>
-      <div style={{flex:1}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-          <span style={{fontSize:16,fontWeight:700,color:"#e0e0e0"}}>{v.Year} Rivian {v.Model}</span>
-          <span style={{fontSize:13,color:"#888"}}>{v.Trim}</span>
-        </div>
-        <div style={{display:"flex",gap:8,marginTop:8,flexWrap:"wrap"}}>
-          {v["Exterior Color"]&&(
-            <span style={{fontSize:11,padding:"3px 10px",borderRadius:5,background:"#1a1a1a",color:"#999",border:"1px solid #222"}}>
-              {v["Exterior Color"]}
-            </span>
-          )}
-          {v["Interior Color"]&&(
-            <span style={{fontSize:11,padding:"3px 10px",borderRadius:5,background:"#1a1a1a",color:"#999",border:"1px solid #222"}}>
-              Int: {v["Interior Color"]}
-            </span>
-          )}
-          {miles!==null&&(
-            <span style={{fontSize:11,padding:"3px 10px",borderRadius:5,background:"#1a1a1a",color:"#999",border:"1px solid #222"}}>
-              {miles.toLocaleString()} mi
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div style={{display:"flex",alignItems:"center",gap:16}}>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:11,color:"#666",marginBottom:2}}>Estimated Price</div>
-          <div style={{fontSize:18,fontWeight:700,color:"#6b9c5a",fontFamily:"'Space Mono',monospace"}}>
-            ${low.toLocaleString()} – ${high.toLocaleString()}
-          </div>
-        </div>
-        <button onClick={()=>onInquire(v,retail)} style={{
-          padding:"10px 20px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",
-          borderRadius:8,color:"#e0eadc",fontSize:12,fontWeight:600,cursor:"pointer",
-          fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",
-        }}>Inquire</button>
+    <div style={{marginBottom:14}}>
+      <div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+        {props.options.map(function(o){var a=props.sel.includes(o);var ct=props.counts?props.counts[o]||0:0;var dim=ct===0&&!a;return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"5px 12px",borderRadius:100,fontSize:12,cursor:dim?"default":"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",fontWeight:a?500:400,border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.5)",opacity:dim?0.3:1,pointerEvents:dim?"none":"auto"}}>{o} <span style={{opacity:0.5,fontSize:10}}>({ct})</span></button>;})}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════
-// INQUIRY MODAL
-// ═══════════════════════════════════════════
-function InquiryModal({vehicle:v,retailPrice,priceRange,onClose,onSubmit,submitting}){
-  const [name,setName]=useState("");const[phone,setPhone]=useState("");const[email,setEmail]=useState("");
-  const [done,setDone]=useState(false);
-  const low=retailPrice-priceRange, high=retailPrice+priceRange;
-
-  const submit=async()=>{
-    if(!name.trim()||!phone.trim())return;
-    await onSubmit({name,phone,email,vehicle:v,retailPrice});
-    setDone(true);
-  };
-
+function MiniPills(props){
   return(
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#161616",border:"1px solid #222",borderRadius:14,padding:28,maxWidth:480,width:"100%"}}>
-        {done?(
-          <div style={{textAlign:"center",padding:"16px 0"}}>
-            <div style={{fontSize:40,marginBottom:12}}>🌊</div>
-            <h3 style={{fontSize:20,fontWeight:700,color:"#e0eadc",marginBottom:6}}>Inquiry Sent!</h3>
-            <p style={{fontSize:14,color:"#999",marginBottom:16}}>
-              <strong style={{color:"#e0eadc"}}>Big Wave Auto</strong> will reach out within <strong style={{color:"#6b9c5a"}}>48 hours</strong>.
-            </p>
-            <div style={{background:"#111",borderRadius:8,padding:14,fontSize:14,color:"#999"}}>
-              {v.Year} Rivian {v.Model} {v.Trim}<br/>
-              <span style={{color:"#6b9c5a",fontFamily:"'Space Mono',monospace"}}>${low.toLocaleString()} – ${high.toLocaleString()}</span>
-            </div>
-            <button onClick={onClose} style={{marginTop:16,padding:"10px 28px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:8,color:"#e0eadc",fontSize:13,fontWeight:600,cursor:"pointer"}}>Done</button>
-          </div>
-        ):(
-          <>
-            <h3 style={{fontSize:18,fontWeight:700,color:"#e0eadc",margin:"0 0 4px"}}>Interested in this Rivian?</h3>
-            <div style={{fontSize:14,color:"#999",marginBottom:4}}>{v.Year} {v.Model} {v.Trim}</div>
-            <div style={{display:"flex",gap:8,marginBottom:18,flexWrap:"wrap"}}>
-              {v["Exterior Color"]&&<span style={{fontSize:11,padding:"3px 8px",borderRadius:4,background:"#111",color:"#888"}}>{v["Exterior Color"]}</span>}
-              <span style={{fontSize:11,padding:"3px 8px",borderRadius:4,background:"#1a2518",color:"#6b9c5a",fontFamily:"'Space Mono',monospace"}}>${low.toLocaleString()} – ${high.toLocaleString()}</span>
-            </div>
-            <div style={{marginBottom:12}}><label style={lb}>Name *</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="John Smith" style={inp}/></div>
-            <div style={{marginBottom:12}}><label style={lb}>Phone *</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="555-123-4567" style={inp}/></div>
-            <div style={{marginBottom:16}}><label style={lb}>Email</label><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="john@email.com" style={inp}/></div>
-            <div style={{display:"flex",gap:10}}>
-              <button onClick={submit} disabled={!name.trim()||!phone.trim()||submitting} style={{
-                flex:1,padding:"12px",background:(name.trim()&&phone.trim())?"linear-gradient(135deg,#4a6741,#3a5431)":"#222",
-                border:"none",borderRadius:8,color:(name.trim()&&phone.trim())?"#e0eadc":"#666",fontSize:14,fontWeight:700,cursor:"pointer",
-              }}>{submitting?"Sending...":"Send Inquiry"}</button>
-              <button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1px solid #333",borderRadius:8,color:"#777",fontSize:13,cursor:"pointer"}}>Cancel</button>
-            </div>
-          </>
-        )}
+    <div style={{marginBottom:12}}>
+      <div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+        {props.options.map(function(o){var a=props.sel.includes(o);return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"4px 10px",borderRadius:100,fontSize:11,cursor:"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.45)",fontWeight:a?500:400}}>{o}</button>;})}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════
-// NOTIFY ME FORM
-// ═══════════════════════════════════════════
-function NotifyForm({initialFilters,onSubmit,submitting}){
-  const [form,setForm]=useState({
-    name:"",phone:"",email:"",notes:"",
-    years:initialFilters?.years||[],models:initialFilters?.models||[],
-    motors:[],batteries:[],wheels:[],colors:[],interiors:[],upgrades:[],features:[],
-    maxBudget:120000,maxMileage:100000,
-  });
-  const [done,setDone]=useState(false);
+function InquiryModal(props){
+  var v=props.v,onClose=props.onClose,onSubmit=props.onSubmit,submitting=props.submitting;
+  var _n=useState(""),_p=useState(""),_e=useState(""),_d=useState(false);
+  var name=_n[0],setName=_n[1],phone=_p[0],setPhone=_p[1],email=_e[0],setEmail=_e[1],done=_d[0],setDone=_d[1];
+  var cinp={width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box"};
+  var ok=name.trim()&&phone.trim();
+  var ov={position:"fixed",inset:0,background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20};
+  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"40px 36px",maxWidth:440,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>Inquiry Sent</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will be in touch within <strong style={{color:"#58c88a"}}>48 hours</strong>.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
+  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"32px 30px",maxWidth:440,width:"100%"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Details</h3><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}><span style={{fontSize:14,color:"rgba(255,255,255,0.5)"}}>{v.Year} {v.Model} {v.Trim}</span><Dot c={v["Exterior Color"]}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div><div style={{marginBottom:20}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,vehicle:v,retailPrice:props.retail});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:100,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Send Inquiry"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:100,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
+}
 
-  const submit=async()=>{
-    if(!form.name.trim()||!form.phone.trim())return;
-    await onSubmit(form);
-    setDone(true);
-  };
-
-  if(done) return(
-    <div style={{background:"#161616",border:"1px solid #222",borderRadius:14,padding:"40px 28px",textAlign:"center"}}>
-      <div style={{fontSize:40,marginBottom:12}}>🌊</div>
-      <h3 style={{fontSize:22,fontWeight:700,color:"#e0eadc",marginBottom:8}}>You're On the List!</h3>
-      <div style={{fontSize:14,color:"#999",marginBottom:20}}>We'll notify you as soon as a matching Rivian hits our inventory.</div>
-      <div style={{background:"#1a2518",border:"1px solid #2a3a2a",borderRadius:10,padding:"16px 20px",fontSize:14,color:"#b0c8a8",lineHeight:1.6}}>
-        <strong style={{color:"#e0eadc"}}>Big Wave Auto</strong> will reach out within <strong style={{color:"#6b9c5a"}}>48 hours</strong> if we find a match.
-      </div>
-      <button onClick={()=>setDone(false)} style={{marginTop:18,padding:"8px 20px",background:"transparent",border:"1px solid #333",borderRadius:6,color:"#777",fontSize:12,cursor:"pointer"}}>Submit Another</button>
-    </div>
-  );
-
-  return(
-    <div style={{background:"#161616",border:"1px solid #222",borderRadius:12,padding:22}}>
-      <div style={{textAlign:"center",marginBottom:20}}>
-        <h3 style={{fontSize:18,fontWeight:700,color:"#e0eadc",margin:"0 0 6px"}}>Don't See What You Want?</h3>
-        <p style={{fontSize:13,color:"#666",margin:0}}>Tell us your ideal spec and we'll notify you when it comes in.</p>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-        <div><label style={lb}>Name *</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="John Smith" style={inp}/></div>
-        <div><label style={lb}>Phone *</label><input value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="555-123-4567" style={inp}/></div>
-      </div>
-      <div style={{marginBottom:14}}><label style={lb}>Email</label><input value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="john@email.com" style={inp}/></div>
-      <MultiSelect label="Year" options={YEARS} selected={form.years} onChange={v=>setForm({...form,years:v})}/>
-      <MultiSelect label="Model" options={MODELS} selected={form.models} onChange={v=>setForm({...form,models:v})}/>
-      <MultiSelect label="Motor" options={MOTORS} selected={form.motors} onChange={v=>setForm({...form,motors:v})}/>
-      <MultiSelect label="Battery" options={BATTERIES} selected={form.batteries} onChange={v=>setForm({...form,batteries:v})}/>
-      <MultiSelect label="Wheels" options={WHEELS} selected={form.wheels} onChange={v=>setForm({...form,wheels:v})}/>
-      <MultiSelect label="Color" options={COLORS_FULL} selected={form.colors} onChange={v=>setForm({...form,colors:v})}/>
-      <MultiSelect label="Interior" options={INTERIORS} selected={form.interiors} onChange={v=>setForm({...form,interiors:v})}/>
-      <MultiSelect label="Upgrades" options={["Performance Upgrade","ASCEND INTERIOR"]} selected={form.upgrades} onChange={v=>setForm({...form,upgrades:v})}/>
-      <MultiSelect label="Features" options={FEATURES} selected={form.features} onChange={v=>setForm({...form,features:v})}/>
-      <div style={{marginBottom:14}}>
-        <label style={lb}>Max Budget</label>
-        <span style={{fontSize:13,fontWeight:600,color:"#6b9c5a",fontFamily:"'Space Mono',monospace",display:"block",marginBottom:6}}>
-          {form.maxBudget>=120000?"Any":"$"+form.maxBudget.toLocaleString()}
-        </span>
-        <input type="range" min={20000} max={120000} step={1000} value={form.maxBudget} onChange={e=>setForm({...form,maxBudget:Number(e.target.value)})}/>
-      </div>
-      <div style={{marginBottom:14}}>
-        <label style={lb}>Max Mileage</label>
-        <span style={{fontSize:13,fontWeight:600,color:"#6b9c5a",fontFamily:"'Space Mono',monospace",display:"block",marginBottom:6}}>
-          {form.maxMileage>=100000?"Any":form.maxMileage.toLocaleString()+" mi"}
-        </span>
-        <input type="range" min={0} max={100000} step={1000} value={form.maxMileage} onChange={e=>setForm({...form,maxMileage:Number(e.target.value)})}/>
-      </div>
-      <div style={{marginBottom:14}}><label style={lb}>Notes</label>
-        <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} placeholder="Timeline, trade-in info..." rows={2} style={{...inp,resize:"vertical"}}/>
-      </div>
-      <button onClick={submit} disabled={!form.name.trim()||!form.phone.trim()||submitting} style={{
-        width:"100%",padding:"12px",background:(form.name.trim()&&form.phone.trim())?"linear-gradient(135deg,#4a6741,#3a5431)":"#222",
-        border:"none",borderRadius:8,color:(form.name.trim()&&form.phone.trim())?"#e0eadc":"#666",fontSize:14,fontWeight:700,cursor:"pointer",
-      }}>{submitting?"Submitting...":"Notify Me When Available"}</button>
-    </div>
-  );
+function NotifyModal(props){
+  var onClose=props.onClose,onSubmit=props.onSubmit,submitting=props.submitting;
+  var _n=useState(""),_p=useState(""),_e=useState(""),_nt=useState(""),_d=useState(false);
+  var name=_n[0],setName=_n[1],phone=_p[0],setPhone=_p[1],email=_e[0],setEmail=_e[1],notes=_nt[0],setNotes=_nt[1],done=_d[0],setDone=_d[1];
+  var _fy=useState([]),_fm=useState([]),_fmo=useState([]),_fb=useState([]),_fc=useState([]),_fi=useState([]);
+  var fy=_fy[0],sfy=_fy[1],fm=_fm[0],sfm=_fm[1],fmo=_fmo[0],sfmo=_fmo[1],fb=_fb[0],sfb=_fb[1],fc=_fc[0],sfc=_fc[1],fi=_fi[0],sfi=_fi[1];
+  var _bud=useState(120000),_mil=useState(100000);var bud=_bud[0],sBud=_bud[1],mil=_mil[0],sMil=_mil[1];
+  var cinp={width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box"};
+  var ok=name.trim()&&phone.trim();
+  function tog(arr,setArr,v){setArr(arr.includes(v)?arr.filter(function(x){return x!==v}):[].concat(arr,[v]))}
+  var ov={position:"fixed",inset:0,background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20,overflowY:"auto"};
+  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"40px 36px",maxWidth:480,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>You are On the List</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will reach out within <strong style={{color:"#58c88a"}}>48 hours</strong> if we find a match.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
+  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"28px 26px",maxWidth:520,width:"100%",maxHeight:"90vh",overflowY:"auto",margin:"auto"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Notified</h3><p style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginBottom:18}}>Tell us your ideal spec and we will notify you when it arrives.</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div></div><div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><MiniPills label="Year" options={YEARS} sel={fy} onToggle={function(v){tog(fy,sfy,v)}}/><MiniPills label="Model" options={MODELS} sel={fm} onToggle={function(v){tog(fm,sfm,v)}}/><MiniPills label="Motor" options={MOTORS} sel={fmo} onToggle={function(v){tog(fmo,sfmo,v)}}/><MiniPills label="Battery" options={BATTERIES} sel={fb} onToggle={function(v){tog(fb,sfb,v)}}/><MiniPills label="Color" options={COLORS_FULL} sel={fc} onToggle={function(v){tog(fc,sfc,v)}}/><MiniPills label="Interior" options={INTERIORS} sel={fi} onToggle={function(v){tog(fi,sfi,v)}}/><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{bud>=120000?"No limit":"$"+bud.toLocaleString()}</div><input type="range" min={20000} max={120000} step={1000} value={bud} onChange={function(x){sBud(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Mileage</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{mil>=100000?"Any":mil.toLocaleString()+" mi"}</div><input type="range" min={0} max={100000} step={1000} value={mil} onChange={function(x){sMil(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:16}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Notes</div><textarea value={notes} onChange={function(x){setNotes(x.target.value)}} placeholder="Timeline, trade-in info..." rows={2} style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:48}}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,notes:notes,years:fy,models:fm,motors:fmo,batteries:fb,colors:fc,interiors:fi,maxBudget:bud<120000?bud:null,maxMileage:mil<100000?mil:null});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:100,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Notify Me"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:100,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
 }
 
 // ═══════════════════════════════════════════
-// ADMIN DASHBOARD (full cost data + settings)
+// ADMIN COMPONENTS (preserved from production)
 // ═══════════════════════════════════════════
+
 function AdminLogin({onLogin}){
   const [pw,setPw]=useState("");const[err,setErr]=useState(false);
   return(
@@ -453,21 +266,27 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
 // ═══════════════════════════════════════════
 // MAIN APP
 // ═══════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════
+
 export default function App(){
   const [mode,setMode]=useState("customer");
   const [adminLoggedIn,setAdminLoggedIn]=useState(false);
   const [vehicles,setVehicles]=useState([]);
   const [vehicleColumns,setVehicleColumns]=useState([]);
   const [settings,setSettings]=useState({...DEFAULT_SETTINGS});
-  const [filters,setFilters]=useState({years:[],models:[],trims:[],colors:[]});
+  const [filters,setFilters]=useState({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]});
   const [sortBy,setSortBy]=useState("retail_asc");
   const [maxPrice,setMaxPrice]=useState(120000);
   const [showNotify,setShowNotify]=useState(false);
   const [inquiryTarget,setInquiryTarget]=useState(null);
   const [submitting,setSubmitting]=useState(false);
-  const [loadingInventory,setLoadingInventory]=useState(true);
   const [adminInquiries,setAdminInquiries]=useState([]);
   const [adminRequests,setAdminRequests]=useState([]);
+  const [loadingInventory,setLoadingInventory]=useState(true);
 
   useEffect(()=>{
     const check=()=>setMode(window.location.hash==="#admin"?"admin":"customer");
@@ -531,9 +350,13 @@ export default function App(){
     reader.readAsText(file);
   },[]);
 
+  function toggle(key,val){
+    setFilters(function(prev){var arr=prev[key];var next=arr.includes(val)?arr.filter(function(x){return x!==val}):[].concat(arr,[val]);var out=Object.assign({},prev);out[key]=next;return out});
+  }
+
   const filterOptions=useMemo(()=>{
     const u=k=>[...new Set(vehicles.map(v=>v[k]).filter(Boolean))].sort();
-    return{years:u("Year"),models:u("Model"),trims:u("Trim"),colors:u("Exterior Color")};
+    return{years:u("Year"),models:u("Model"),trims:u("Trim"),batteries:u("Battery"),motors:u("Motor"),colors:u("Exterior Color")};
   },[vehicles]);
 
   const processed=useMemo(()=>{
@@ -541,6 +364,8 @@ export default function App(){
       if(filters.years.length&&!filters.years.includes(v.Year))return false;
       if(filters.models.length&&!filters.models.includes(v.Model))return false;
       if(filters.trims.length&&!filters.trims.includes(v.Trim))return false;
+      if(filters.batteries.length&&!filters.batteries.includes(v.Battery))return false;
+      if(filters.motors.length&&!filters.motors.includes(v.Motor))return false;
       if(filters.colors.length&&!filters.colors.includes(v["Exterior Color"]))return false;
       return true;
     });
@@ -551,7 +376,6 @@ export default function App(){
         case"retail_asc":return a.costs.retail-b.costs.retail;
         case"retail_desc":return b.costs.retail-a.costs.retail;
         case"miles_asc":return(parseInt(a.vehicle["Odometer Value"])||0)-(parseInt(b.vehicle["Odometer Value"])||0);
-        case"grade_desc":return(parseFloat(b.vehicle["Condition Report Grade"])||0)-(parseFloat(a.vehicle["Condition Report Grade"])||0);
         default:return 0;
       }
     });
@@ -560,18 +384,20 @@ export default function App(){
 
   const filterCounts=useMemo(()=>{
     const c=(key,csvKey)=>{
-      const of={...filters,[key]:[]};
+      const of2={...filters,[key]:[]};
       const base=vehicles.filter(v=>{
-        if(of.years.length&&!of.years.includes(v.Year))return false;
-        if(of.models.length&&!of.models.includes(v.Model))return false;
-        if(of.trims.length&&!of.trims.includes(v.Trim))return false;
-        if(of.colors.length&&!of.colors.includes(v["Exterior Color"]))return false;
+        if(of2.years.length&&!of2.years.includes(v.Year))return false;
+        if(of2.models.length&&!of2.models.includes(v.Model))return false;
+        if(of2.trims.length&&!of2.trims.includes(v.Trim))return false;
+        if(of2.batteries.length&&!of2.batteries.includes(v.Battery))return false;
+        if(of2.motors.length&&!of2.motors.includes(v.Motor))return false;
+        if(of2.colors.length&&!of2.colors.includes(v["Exterior Color"]))return false;
         return true;
       });
       const counts={};base.forEach(v=>{const val=v[csvKey];if(val)counts[val]=(counts[val]||0)+1});
       return counts;
     };
-    return{years:c("years","Year"),models:c("models","Model"),trims:c("trims","Trim"),colors:c("colors","Exterior Color")};
+    return{years:c("years","Year"),models:c("models","Model"),trims:c("trims","Trim"),batteries:c("batteries","Battery"),motors:c("motors","Motor"),colors:c("colors","Exterior Color")};
   },[vehicles,filters]);
 
   const submitInquiry=async({name,phone,email,vehicle:v,retailPrice})=>{
@@ -583,26 +409,25 @@ export default function App(){
 
   const submitNotify=async form=>{
     setSubmitting(true);
-    await supabase.from("requests").insert([{name:form.name,phone:form.phone,email:form.email,notes:form.notes,years:form.years,models:form.models,motors:form.motors,batteries:form.batteries,wheels:form.wheels,colors:form.colors,interiors:form.interiors,upgrades:form.upgrades,features:form.features,max_budget:form.maxBudget,max_mileage:form.maxMileage}]);
+    await supabase.from("requests").insert([{name:form.name,phone:form.phone,email:form.email,notes:form.notes,years:form.years,models:form.models,motors:form.motors,batteries:form.batteries,colors:form.colors,interiors:form.interiors,max_budget:form.maxBudget,max_mileage:form.maxMileage}]);
     setSubmitting(false);
   };
 
-  return(
-    <div style={{minHeight:"100vh",background:"#0f0f0f",color:"#e0e0e0",fontFamily:"'DM Sans',sans-serif"}}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-      <style dangerouslySetInnerHTML={{__html:css}}/>
+  const hasFilters=filters.years.length||filters.models.length||filters.trims.length||filters.batteries.length||filters.motors.length||filters.colors.length;
 
-      {inquiryTarget&&<InquiryModal vehicle={inquiryTarget.vehicle} retailPrice={inquiryTarget.retail} priceRange={settings.priceRange}
-        onClose={()=>setInquiryTarget(null)} onSubmit={submitInquiry} submitting={submitting}/>}
+  return(
+    <div style={{minHeight:"100vh",background:"#0c0c0c",color:"#fff",fontFamily:"Outfit,sans-serif"}}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+      <style dangerouslySetInnerHTML={{__html:adminCss}}/>
+
+      {inquiryTarget&&<InquiryModal v={inquiryTarget.vehicle} retail={inquiryTarget.retail} onClose={()=>setInquiryTarget(null)} onSubmit={submitInquiry} submitting={submitting}/>}
+      {showNotify&&<NotifyModal onClose={()=>setShowNotify(false)} onSubmit={submitNotify} submitting={submitting}/>}
 
       {/* ADMIN */}
       {mode==="admin"&&!adminLoggedIn&&<AdminLogin onLogin={()=>{setAdminLoggedIn(true);loadAdmin();}}/>}
       {mode==="admin"&&adminLoggedIn&&<AdminDashboard
         inquiries={adminInquiries} requests={adminRequests}
-        settings={settings} onSettingsChange={async(ns)=>{
-          setSettings(ns);
-          try{await supabase.from("settings").delete().neq("id",0);await supabase.from("settings").insert([{values:ns}]);}catch(err){console.error(err);}
-        }}
+        settings={settings} onSettingsChange={async(ns)=>{setSettings(ns);try{await supabase.from("settings").delete().neq("id",0);await supabase.from("settings").insert([{values:ns}]);}catch(err){console.error(err);}}}
         vehicles={vehicles} vehicleColumns={vehicleColumns} onUpload={handleUpload}
         onDeleteInquiry={async(id,i)=>{if(id)await supabase.from("inquiries").delete().eq("id",id);setAdminInquiries(p=>p.filter((_,j)=>j!==i));}}
         onDeleteRequest={async(id,i)=>{if(id)await supabase.from("requests").delete().eq("id",id);setAdminRequests(p=>p.filter((_,j)=>j!==i));}}
@@ -611,86 +436,70 @@ export default function App(){
       {/* CUSTOMER */}
       {mode==="customer"&&(
         <>
-          <div style={{padding:"24px 28px 18px",borderBottom:"1px solid #1e1e1e",background:"linear-gradient(180deg,#141414,#0f0f0f)"}}>
-            <div style={{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div>
-                <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.15em",color:"#4a6741",textTransform:"uppercase",fontFamily:"'Space Mono',monospace",marginBottom:3}}>Big Wave Auto</div>
-                <h1 style={{fontSize:24,fontWeight:300,margin:0,color:"#f0f0f0"}}>Available <span style={{fontWeight:700}}>Rivians</span></h1>
+          <div style={{padding:"20px 28px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+            <div style={{maxWidth:1200,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{display:"flex",alignItems:"baseline",gap:10}}>
+                <h1 style={{fontSize:22,fontWeight:300,letterSpacing:"-0.02em"}}><span style={{fontWeight:600}}>Rivian</span> Inventory</h1>
+                {vehicles.length>0&&<span style={{fontSize:12,fontWeight:500,color:"#58c88a",background:"rgba(72,160,120,0.1)",padding:"3px 10px",borderRadius:100}}>{processed.length} available</span>}
               </div>
-              {vehicles.length>0&&<span style={{background:"#1a2518",color:"#6b9c5a",padding:"4px 12px",borderRadius:20,fontSize:12,fontWeight:700,fontFamily:"'Space Mono',monospace"}}>{processed.length} vehicle{processed.length!==1?"s":""}</span>}
             </div>
           </div>
 
-          <div style={{maxWidth:1100,margin:"0 auto",padding:"20px 28px"}}>
-            {vehicles.length===0?(
-              <div style={{background:"#161616",border:"1px solid #222",borderRadius:12,padding:40,textAlign:"center",marginBottom:24}}>
-                {loadingInventory?(
-                  <div style={{fontSize:14,color:"#888"}}>Loading inventory...</div>
-                ):(
-                  <div>
-                    <div style={{fontSize:14,color:"#888",marginBottom:12}}>No vehicles available right now.</div>
-                    <button onClick={()=>setShowNotify(true)} style={{padding:"12px 28px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:10,color:"#e0eadc",fontSize:14,fontWeight:700,cursor:"pointer"}}>Notify Me When Inventory is Available</button>
-                  </div>
-                )}
-              </div>
+          <div style={{maxWidth:1200,margin:"0 auto",padding:"20px 28px 60px"}}>
+            {loadingInventory?(
+              <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>Loading inventory...</div></div>
+            ):vehicles.length===0?(
+              <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles available right now</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
             ):(
-              <div style={{display:"grid",gridTemplateColumns:"260px 1fr",gap:24}}>
-                {/* SIDEBAR — filters only, no pricing */}
-                <div style={{background:"#161616",border:"1px solid #222",borderRadius:10,padding:18,position:"sticky",top:16,alignSelf:"start"}}>
-                  <div style={{fontSize:12,fontWeight:700,color:"#aaa",marginBottom:14,textTransform:"uppercase",letterSpacing:"0.08em"}}>Find Your Rivian</div>
-                  <FilterPills label="Year" options={filterOptions.years} selected={filters.years} onChange={v=>setFilters({...filters,years:v})} counts={filterCounts.years}/>
-                  <FilterPills label="Model" options={filterOptions.models} selected={filters.models} onChange={v=>setFilters({...filters,models:v})} counts={filterCounts.models}/>
-                  <FilterPills label="Trim" options={filterOptions.trims} selected={filters.trims} onChange={v=>setFilters({...filters,trims:v})} counts={filterCounts.trims}/>
-                  <FilterPills label="Color" options={filterOptions.colors} selected={filters.colors} onChange={v=>setFilters({...filters,colors:v})} counts={filterCounts.colors}/>
-
-                  <div style={{marginBottom:14}}>
-                    <label style={lb}>Max Budget</label>
-                    <span style={{fontSize:13,fontWeight:600,color:"#6b9c5a",fontFamily:"'Space Mono',monospace",display:"block",marginBottom:6}}>
-                      {maxPrice>=120000?"Any":"$"+maxPrice.toLocaleString()}
-                    </span>
-                    <input type="range" min={30000} max={120000} step={1000} value={maxPrice} onChange={e=>setMaxPrice(Number(e.target.value))}/>
+              <div style={{display:"grid",gridTemplateColumns:"230px 1fr",gap:24}}>
+                <div style={{position:"sticky",top:16,alignSelf:"start"}}>
+                  <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:18}}>
+                    <div style={{fontSize:13,fontWeight:600,color:"rgba(255,255,255,0.7)",marginBottom:16}}>Find Your Rivian</div>
+                    <FilterPills label="Year" options={filterOptions.years} sel={filters.years} onToggle={function(v){toggle("years",v)}} counts={filterCounts.years}/>
+                    <FilterPills label="Model" options={filterOptions.models} sel={filters.models} onToggle={function(v){toggle("models",v)}} counts={filterCounts.models}/>
+                    <FilterPills label="Trim" options={filterOptions.trims} sel={filters.trims} onToggle={function(v){toggle("trims",v)}} counts={filterCounts.trims}/>
+                    <FilterPills label="Battery" options={filterOptions.batteries} sel={filters.batteries} onToggle={function(v){toggle("batteries",v)}} counts={filterCounts.batteries}/>
+                    <FilterPills label="Motor" options={filterOptions.motors} sel={filters.motors} onToggle={function(v){toggle("motors",v)}} counts={filterCounts.motors}/>
+                    <FilterPills label="Color" options={filterOptions.colors} sel={filters.colors} onToggle={function(v){toggle("colors",v)}} counts={filterCounts.colors}/>
+                    <div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:14,fontWeight:500,color:"#58c88a",marginBottom:6}}>{maxPrice>=120000?"No limit":"Up to $"+maxPrice.toLocaleString()}</div><input type="range" min={30000} max={120000} step={1000} value={maxPrice} onChange={function(e){setMaxPrice(Number(e.target.value))}} style={{width:"100%"}}/></div>
+                    <div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Sort</div><select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{width:"100%",padding:"8px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,color:"rgba(255,255,255,0.6)",fontSize:12,outline:"none",fontFamily:"Outfit,sans-serif"}}><option value="retail_asc">Price: Low to High</option><option value="retail_desc">Price: High to Low</option><option value="miles_asc">Mileage: Low to High</option></select></div>
+                    {hasFilters?<button onClick={function(){setFilters({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]})}} style={{width:"100%",padding:"8px",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:100,color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif",fontWeight:500}}>Clear All Filters</button>:null}
                   </div>
-
-                  <div style={{marginBottom:14}}>
-                    <label style={lb}>Sort By</label>
-                    <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{width:"100%",padding:"8px 10px",background:"#0f0f0f",border:"1.5px solid #222",borderRadius:6,color:"#ccc",fontSize:12,outline:"none"}}>
-                      <option value="retail_asc">Price: Low → High</option>
-                      <option value="retail_desc">Price: High → Low</option>
-                      <option value="miles_asc">Mileage: Low → High</option>
-                    </select>
-                  </div>
-
-                  {(filters.years.length||filters.models.length||filters.trims.length||filters.colors.length)?
-                    <button onClick={()=>setFilters({years:[],models:[],trims:[],colors:[]})} style={{width:"100%",padding:"8px",background:"transparent",border:"1px solid #333",borderRadius:6,color:"#777",fontSize:11,cursor:"pointer"}}>Clear All Filters</button>
-                  :null}
                 </div>
 
-                {/* VEHICLE LIST — clean customer view */}
                 <div>
                   {processed.length===0?(
-                    <div style={{background:"#161616",border:"1px solid #222",borderRadius:12,padding:48,textAlign:"center"}}>
-                      <div style={{fontSize:32,marginBottom:12}}>🔍</div>
-                      <div style={{fontSize:15,color:"#888"}}>No vehicles match your filters</div>
-                      <div style={{fontSize:13,color:"#666",marginTop:6}}>Try adjusting your filters, or:</div>
-                      <button onClick={()=>setShowNotify(true)} style={{marginTop:16,padding:"12px 28px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:10,color:"#e0eadc",fontSize:14,fontWeight:700,cursor:"pointer"}}>Notify Me When One Comes In</button>
-                    </div>
+                    <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles match your filters</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
                   ):(
-                    <>
-                      {processed.map((item,i)=>(
-                        <CustomerVehicleCard key={item.vehicle.Vin||i} vehicle={item.vehicle}
-                          retail={item.costs.retail} priceRange={settings.priceRange} index={i}
-                          onInquire={(v,r)=>setInquiryTarget({vehicle:v,retail:r})}/>
-                      ))}
-                      <div style={{background:"#161616",border:"1px solid #222",borderRadius:12,padding:"28px 24px",textAlign:"center",marginTop:16}}>
-                        <div style={{fontSize:15,color:"#999",marginBottom:12}}>Don't see exactly what you're looking for?</div>
-                        <button onClick={()=>setShowNotify(true)} style={{padding:"12px 32px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:10,color:"#e0eadc",fontSize:14,fontWeight:700,cursor:"pointer"}}>Notify Me When My Spec Comes In</button>
+                    <div>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))",gap:12}}>
+                        {processed.map(function(item){
+                          var v=item.vehicle,ret=item.costs.retail,lo=ret-settings.priceRange,hi=ret+settings.priceRange;
+                          var mi=v["Odometer Value"]?parseInt(v["Odometer Value"]):null;
+                          return(
+                            <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,padding:"18px 20px",cursor:"pointer",transition:"all .2s"}}>
+                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+                                <div style={{fontSize:18,fontWeight:700,color:"#fff",letterSpacing:"-0.01em"}}>{v.Model} {v.Trim}</div>
+                                <div style={{fontSize:13,fontWeight:500,color:"rgba(255,255,255,0.35)"}}>{v.Year}</div>
+                              </div>
+                              <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",marginBottom:4}}>{mi!==null?mi.toLocaleString()+" mi":""}  {mi?" \u00B7 ":""}{v.Motor?v.Motor+"-Motor AWD":""}{v.Battery?" \u00B7 "+v.Battery+" battery":""}</div>
+                              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                                <div style={{display:"flex",alignItems:"center",gap:5}}><Dot c={v["Exterior Color"]} size={11}/><span style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>{v["Exterior Color"]}</span></div>
+                                <span style={{color:"rgba(255,255,255,0.15)"}}>|</span>
+                                <div style={{display:"flex",alignItems:"center",gap:5}}><Dot c={v["Interior Color"]} size={11}/><span style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>{v["Interior Color"]}</span></div>
+                              </div>
+                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.05)",paddingTop:12}}>
+                                <div style={{fontSize:17,fontWeight:700,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+lo.toLocaleString()+" \u2013 $"+hi.toLocaleString()}</div>
+                                <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(72,160,120,0.5)",borderRadius:100,color:"#58c88a",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </>
-                  )}
-                  {showNotify&&(
-                    <div style={{marginTop:20}}>
-                      <NotifyForm initialFilters={filters} onSubmit={submitNotify} submitting={submitting}/>
-                      <button onClick={()=>setShowNotify(false)} style={{display:"block",margin:"12px auto 0",padding:"8px 20px",background:"transparent",border:"1px solid #333",borderRadius:6,color:"#666",fontSize:11,cursor:"pointer"}}>Hide Form</button>
+                      <div style={{textAlign:"center",padding:"36px 20px",marginTop:10}}>
+                        <div style={{fontSize:14,color:"rgba(255,255,255,0.35)",marginBottom:14}}>Don't see your perfect spec?</div>
+                        <button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:100,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button>
+                      </div>
                     </div>
                   )}
                 </div>
