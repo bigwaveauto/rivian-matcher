@@ -64,14 +64,14 @@ function enrichVehicle(v){
     v._enriched=true;
     // Parse motor from trim (e.g. "Quad Large" -> Motor:"Quad", Battery:"Large")
     if(!v.Motor||!v.Battery){
-      const parts=(v.Trim||"").split(/\\s+/);
+      const parts=(v.Trim||"").split(/\s+/);
       parts.forEach(function(p){
         if(!v.Motor&&TRIM_MOTORS[p])v.Motor=p;
         if(!v.Battery&&TRIM_BATTERIES[p])v.Battery=p;
       });
     }
     // Derive clean trim name (strip motor+battery words)
-    var trimWords=(v.Trim||"").split(/\\s+/).filter(function(w){return!TRIM_MOTORS[w]&&!TRIM_BATTERIES[w]});
+    var trimWords=(v.Trim||"").split(/\s+/).filter(function(w){return!TRIM_MOTORS[w]&&!TRIM_BATTERIES[w]});
     v._cleanTrim=trimWords.length>0?trimWords.join(" "):v.Trim;
   }
   return v;
@@ -494,7 +494,7 @@ export default function App(){
                     <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles match your filters</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
                   ):(
                     <div>
-                      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))",gap:12}}>
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
                         {processed.map(function(item){
                           var v=item.vehicle,ret=item.costs.retail,lo=ret-settings.priceRange,hi=ret+settings.priceRange;
                           var mi=v["Odometer Value"]?parseInt(v["Odometer Value"]):null;
