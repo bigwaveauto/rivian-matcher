@@ -519,7 +519,7 @@ export default function App(){
                                 </div>
                               </div>
                               <div style={{textAlign:"right",flexShrink:0,marginRight:12}}>
-                                <div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontSize:14,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+Math.round(ret/100)*100}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>{"± $"+(settings.priceRange/1000)+"k"}</span></div>
+                                <div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontSize:14,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round(ret/100)*100).toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>{"± $"+(settings.priceRange>=1000?((settings.priceRange/1000)+"k"):settings.priceRange)}</span></div>
                               </div>
                               <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(72,160,120,0.4)",borderRadius:6,color:"#58c88a",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
                             </div>
