@@ -226,20 +226,29 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
         {/* INVENTORY */}
         {tab==="inventory"&&(
           <div>
-            <div style={{background:"#161616",border:"1px solid #222",borderRadius:12,padding:24,marginBottom:20,textAlign:"center"}}>
-              <label style={{display:"inline-block",padding:"12px 32px",background:"linear-gradient(135deg,#1a2538,#162030)",border:"1.5px solid #2a3a4a",borderRadius:10,color:"#7a9cb5",fontSize:14,fontWeight:600,cursor:"pointer"}}>
-                {vehicles.length>0?`✓ ${vehicles.length} vehicles loaded`:"Upload CSV"}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#161616",border:"1px solid #222",borderRadius:12,padding:"16px 24px",marginBottom:12}}>
+              <label style={{display:"inline-block",padding:"10px 24px",background:"linear-gradient(135deg,#1a2538,#162030)",border:"1.5px solid #2a3a4a",borderRadius:10,color:"#7a9cb5",fontSize:13,fontWeight:600,cursor:"pointer"}}>
+                {vehicles.length>0?`Re-upload CSV (${vehicles.length} loaded)`:"Upload CSV"}
                 <input type="file" accept=".csv,.tsv,.txt" onChange={onUpload} style={{display:"none"}}/>
               </label>
+              {vehicles.length>0&&<button onClick={async()=>{try{await supabase.from("inventory").delete().neq("id",0);await supabase.from("inventory").insert([{vehicles:vehicles,columns:vehicleColumns,uploaded_at:new Date().toISOString()}]);alert("Inventory saved!");}catch(err){alert("Save failed: "+err.message);}}} style={{padding:"10px 24px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:10,color:"#e0eadc",fontSize:13,fontWeight:600,cursor:"pointer"}}>Save Changes</button>}
             </div>
             {vehicles.length>0&&(
-              <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #222"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-                  <thead><tr>
-                    {vehicleColumns.slice(0,8).map(c=><th key={c} style={{padding:"10px 12px",background:"#1a1a1a",borderBottom:"1px solid #2a2a2a",textAlign:"left",color:"#8a9a7e",fontWeight:700,fontSize:11,textTransform:"uppercase",whiteSpace:"nowrap"}}>{c}</th>)}
+              <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #222",maxHeight:"70vh",overflowY:"auto"}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                  <thead style={{position:"sticky",top:0,zIndex:10}}><tr>
+                    <th style={{padding:"8px 6px",background:"#1a1a1a",borderBottom:"2px solid #333",textAlign:"center",color:"#666",fontWeight:600,fontSize:10,width:40}}>#</th>
+                    {vehicleColumns.map(c=><th key={c} style={{padding:"8px 10px",background:"#1a1a1a",borderBottom:"2px solid #333",textAlign:"left",color:"#8a9a7e",fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",minWidth:80}}>{c}</th>)}
+                    <th style={{padding:"8px 6px",background:"#1a1a1a",borderBottom:"2px solid #333",width:50}}></th>
                   </tr></thead>
                   <tbody>
-                    {vehicles.slice(0,30).map((r,i)=><tr key={i}>{vehicleColumns.slice(0,8).map(c=><td key={c} style={{padding:"8px 12px",borderBottom:"1px solid #1a1a1a",color:"#bbb",whiteSpace:"nowrap",maxWidth:180,overflow:"hidden",textOverflow:"ellipsis"}}>{r[c]}</td>)}</tr>)}
+                    {vehicles.map((r,i)=><tr key={i} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                      <td style={{padding:"4px 6px",borderBottom:"1px solid #1a1a1a",color:"#555",textAlign:"center",fontSize:10}}>{i+1}</td>
+                      {vehicleColumns.map(c=><td key={c} style={{padding:"2px 4px",borderBottom:"1px solid #1a1a1a"}}>
+                        <input value={r[c]||""} onChange={e=>{const nv=[...vehicles];nv[i]={...nv[i],[c]:e.target.value};if(nv[i]._enriched){nv[i]._enriched=false;enrichVehicle(nv[i]);}setVehicles(nv);}} style={{width:"100%",padding:"4px 6px",background:"transparent",border:"1px solid transparent",borderRadius:3,color:"#ccc",fontSize:11,outline:"none",fontFamily:"'DM Sans',sans-serif",boxSizing:"border-box",minWidth:60}} onFocus={e=>{e.target.style.border="1px solid #4a6741";e.target.style.background="rgba(255,255,255,0.04)";}} onBlur={e=>{e.target.style.border="1px solid transparent";e.target.style.background="transparent";}}/>
+                      </td>)}
+                      <td style={{padding:"2px 4px",borderBottom:"1px solid #1a1a1a",textAlign:"center"}}><button onClick={()=>{const nv=vehicles.filter((_,j)=>j!==i);setVehicles(nv);}} style={{padding:"3px 8px",background:"#251a1a",border:"none",borderRadius:4,color:"#b57a7a",fontSize:9,fontWeight:600,cursor:"pointer"}}>✕</button></td>
+                    </tr>)}
                   </tbody>
                 </table>
               </div>
@@ -255,7 +264,7 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
                 <div>
                   <div style={{fontSize:15,fontWeight:600,color:"#e0e0e0"}}>{r.name} <span style={{fontSize:12,color:"#666",fontWeight:400}}>{r.phone} {r.email&&`· ${r.email}`}</span></div>
-                  <div style={{fontSize:13,color:"#888",marginTop:4}}>Vehicle: {r.vehicle_desc||"—"}</div>
+                  <div style={{fontSize:13,color:"#888",marginTop:4}}>Vehicle: {r.vehicle_desc||"—"}{r.vin&&<span style={{fontSize:11,color:"#666"}}> · VIN: <span style={{fontFamily:"'Space Mono',monospace",color:"#7a9cb5",userSelect:"all"}}>{r.vin}</span></span>}</div>
                   <div style={{fontSize:11,color:"#555",marginTop:2}}>Retail: ${(r.retail_price||0).toLocaleString()} · Wholesale: ${(r.wholesale_cost||0).toLocaleString()} · {r.created_at?new Date(r.created_at).toLocaleString():"—"}</div>
                 </div>
                 <button onClick={()=>onDeleteInquiry(r.id,i)} style={{padding:"5px 12px",background:"#251a1a",border:"none",borderRadius:6,color:"#b57a7a",fontSize:11,fontWeight:600,cursor:"pointer"}}>Remove</button>
