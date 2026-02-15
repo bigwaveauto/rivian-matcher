@@ -43,10 +43,10 @@ const R1T_IMG="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAABnCAYAAABFEg2
 
 const adminCss = `
   input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:#2a2a2a;outline:none}
-  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#4a6741,#3a5431);border:2px solid #6b9c5a;cursor:pointer}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#3a6a8a,#2a5a7a);border:2px solid #5a9cc0;cursor:pointer}
 `;
 
-const lb = {display:"block",fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#7a8a6e",marginBottom:5,fontFamily:"'DM Sans',sans-serif"};
+const lb = {display:"block",fontSize:10,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#6a8a9e",marginBottom:5,fontFamily:"'DM Sans',sans-serif"};
 const inp = {width:"100%",padding:"10px 12px",background:"#0f0f0f",border:"1.5px solid #2a2a2a",borderRadius:8,color:"#e0e0e0",fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",boxSizing:"border-box"};
 
 function calcCosts(v,s){
@@ -89,9 +89,9 @@ function Dot(props){return <div style={{width:props.size||12,height:props.size||
 function FilterPills(props){
   return(
     <div style={{marginBottom:14}}>
-      <div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
+      <div style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-        {props.options.map(function(o){var a=props.sel.includes(o);var ct=props.counts?props.counts[o]||0:0;var dim=ct===0&&!a;return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"5px 12px",borderRadius:6,fontSize:12,cursor:dim?"default":"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",fontWeight:a?500:400,border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.5)",opacity:dim?0.3:1,pointerEvents:dim?"none":"auto"}}>{o} <span style={{opacity:0.5,fontSize:10}}>({ct})</span></button>;})}
+        {props.options.map(function(o){var a=props.sel.includes(o);var ct=props.counts?props.counts[o]||0:0;var dim=ct===0&&!a;return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"5px 12px",borderRadius:6,fontSize:12,cursor:dim?"default":"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",fontWeight:a?500:400,border:a?"1.5px solid rgba(90,180,212,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(90,180,212,0.1)":"transparent",color:a?"#5ab5d4":"rgba(255,255,255,0.5)",opacity:dim?0.3:1,pointerEvents:dim?"none":"auto"}}>{o} <span style={{opacity:0.5,fontSize:10}}>({ct})</span></button>;})}
       </div>
     </div>
   );
@@ -100,9 +100,9 @@ function FilterPills(props){
 function MiniPills(props){
   return(
     <div style={{marginBottom:12}}>
-      <div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
+      <div style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5,fontFamily:"Outfit,sans-serif"}}>{props.label}</div>
       <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-        {props.options.map(function(o){var a=props.sel.includes(o);return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"4px 10px",borderRadius:6,fontSize:11,cursor:"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",border:a?"1.5px solid rgba(72,160,120,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(72,160,120,0.1)":"transparent",color:a?"#58c88a":"rgba(255,255,255,0.45)",fontWeight:a?500:400}}>{o}</button>;})}
+        {props.options.map(function(o){var a=props.sel.includes(o);return <button key={o} onClick={function(){props.onToggle(o)}} style={{padding:"4px 10px",borderRadius:6,fontSize:11,cursor:"pointer",transition:"all .2s",whiteSpace:"nowrap",fontFamily:"Outfit,sans-serif",border:a?"1.5px solid rgba(90,180,212,0.6)":"1.5px solid rgba(255,255,255,0.08)",background:a?"rgba(90,180,212,0.1)":"transparent",color:a?"#5ab5d4":"rgba(255,255,255,0.45)",fontWeight:a?500:400}}>{o}</button>;})}
       </div>
     </div>
   );
@@ -115,8 +115,8 @@ function InquiryModal(props){
   var cinp={width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box"};
   var ok=name.trim()&&phone.trim();
   var ov={position:"fixed",inset:0,background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20};
-  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 36px",maxWidth:440,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>Inquiry Sent</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will be in touch within <strong style={{color:"#58c88a"}}>48 hours</strong>.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
-  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"32px 30px",maxWidth:440,width:"100%"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Details</h3><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}><span style={{fontSize:14,color:"rgba(255,255,255,0.5)"}}>{v.Year} {v.Model} {v._cleanTrim||v.Trim}</span><Dot c={v["Exterior Color"]}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div><div style={{marginBottom:20}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,vehicle:v,retailPrice:props.retail});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:6,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Send Inquiry"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:6,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
+  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 36px",maxWidth:440,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(90,180,212,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#5ab5d4"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>Inquiry Sent</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will be in touch within <strong style={{color:"#5ab5d4"}}>48 hours</strong>.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#5ab5d4",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
+  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"32px 30px",maxWidth:440,width:"100%"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Details</h3><div style={{display:"flex",alignItems:"center",gap:8,marginBottom:20}}><span style={{fontSize:14,color:"rgba(255,255,255,0.5)"}}>{v.Year} {v.Model} {v._cleanTrim||v.Trim}</span><Dot c={v["Exterior Color"]}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div><div style={{marginBottom:20}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,vehicle:v,retailPrice:props.retail});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#5ab5d4":"rgba(255,255,255,0.1)",border:"none",borderRadius:6,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Send Inquiry"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:6,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
 }
 
 function NotifyModal(props){
@@ -130,8 +130,8 @@ function NotifyModal(props){
   var ok=name.trim()&&phone.trim();
   function tog(arr,setArr,v){setArr(arr.includes(v)?arr.filter(function(x){return x!==v}):[].concat(arr,[v]))}
   var ov={position:"fixed",inset:0,background:"rgba(0,0,0,.8)",backdropFilter:"blur(8px)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:20,overflowY:"auto"};
-  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 36px",maxWidth:480,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(72,160,120,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#58c88a"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>You are On the List</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will reach out within <strong style={{color:"#58c88a"}}>48 hours</strong> if we find a match.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
-  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 26px",maxWidth:520,width:"100%",maxHeight:"90vh",overflowY:"auto",margin:"auto"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Notified</h3><p style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginBottom:18}}>Tell us your ideal spec and we will notify you when it arrives.</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div></div><div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><MiniPills label="Year" options={YEARS} sel={fy} onToggle={function(v){tog(fy,sfy,v)}}/><MiniPills label="Model" options={MODELS} sel={fm} onToggle={function(v){tog(fm,sfm,v)}}/><MiniPills label="Motor" options={MOTORS} sel={fmo} onToggle={function(v){tog(fmo,sfmo,v)}}/><MiniPills label="Battery" options={BATTERIES} sel={fb} onToggle={function(v){tog(fb,sfb,v)}}/><MiniPills label="Color" options={COLORS_FULL} sel={fc} onToggle={function(v){tog(fc,sfc,v)}}/><MiniPills label="Interior" options={INTERIORS} sel={fi} onToggle={function(v){tog(fi,sfi,v)}}/><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{bud>=120000?"No limit":"$"+bud.toLocaleString()}</div><input type="range" min={20000} max={120000} step={1000} value={bud} onChange={function(x){sBud(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:12}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Mileage</div><div style={{fontSize:13,fontWeight:500,color:"#58c88a",marginBottom:6}}>{mil>=100000?"Any":mil.toLocaleString()+" mi"}</div><input type="range" min={0} max={100000} step={1000} value={mil} onChange={function(x){sMil(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:16}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Notes</div><textarea value={notes} onChange={function(x){setNotes(x.target.value)}} placeholder="Timeline, trade-in info..." rows={2} style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:48}}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,notes:notes,years:fy,models:fm,motors:fmo,batteries:fb,colors:fc,interiors:fi,maxBudget:bud<120000?bud:null,maxMileage:mil<100000?mil:null});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#58c88a":"rgba(255,255,255,0.1)",border:"none",borderRadius:6,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Notify Me"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:6,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
+  if(done)return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"40px 36px",maxWidth:480,width:"100%",textAlign:"center"}}><div style={{width:56,height:56,borderRadius:"50%",background:"rgba(90,180,212,0.12)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",fontSize:24,color:"#5ab5d4"}}>{"\u2713"}</div><h3 style={{fontSize:22,fontWeight:600,color:"#fff",marginBottom:8}}>You are On the List</h3><p style={{fontSize:14,color:"rgba(255,255,255,0.5)",marginBottom:20}}>We will reach out within <strong style={{color:"#5ab5d4"}}>48 hours</strong> if we find a match.</p><button onClick={onClose} style={{padding:"12px 32px",background:"#5ab5d4",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Done</button></div></div>);
+  return(<div onClick={onClose} style={ov}><div onClick={function(x){x.stopPropagation()}} style={{background:"#161616",border:"1px solid rgba(255,255,255,0.08)",borderRadius:12,padding:"28px 26px",maxWidth:520,width:"100%",maxHeight:"90vh",overflowY:"auto",margin:"auto"}}><h3 style={{fontSize:20,fontWeight:600,color:"#fff",margin:"0 0 4px"}}>Get Notified</h3><p style={{fontSize:13,color:"rgba(255,255,255,0.4)",marginBottom:18}}>Tell us your ideal spec and we will notify you when it arrives.</p><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Name *</div><input value={name} onChange={function(x){setName(x.target.value)}} placeholder="Your name" style={cinp}/></div><div><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Phone *</div><input value={phone} onChange={function(x){setPhone(x.target.value)}} placeholder="(555) 123-4567" style={cinp}/></div></div><div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Email</div><input value={email} onChange={function(x){setEmail(x.target.value)}} placeholder="you@email.com" style={cinp}/></div><MiniPills label="Year" options={YEARS} sel={fy} onToggle={function(v){tog(fy,sfy,v)}}/><MiniPills label="Model" options={MODELS} sel={fm} onToggle={function(v){tog(fm,sfm,v)}}/><MiniPills label="Motor" options={MOTORS} sel={fmo} onToggle={function(v){tog(fmo,sfmo,v)}}/><MiniPills label="Battery" options={BATTERIES} sel={fb} onToggle={function(v){tog(fb,sfb,v)}}/><MiniPills label="Color" options={COLORS_FULL} sel={fc} onToggle={function(v){tog(fc,sfc,v)}}/><MiniPills label="Interior" options={INTERIORS} sel={fi} onToggle={function(v){tog(fi,sfi,v)}}/><div style={{marginBottom:12}}><div style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:13,fontWeight:500,color:"#5ab5d4",marginBottom:6}}>{bud>=120000?"No limit":"$"+bud.toLocaleString()}</div><input type="range" min={20000} max={120000} step={1000} value={bud} onChange={function(x){sBud(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:12}}><div style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Mileage</div><div style={{fontSize:13,fontWeight:500,color:"#5ab5d4",marginBottom:6}}>{mil>=100000?"Any":mil.toLocaleString()+" mi"}</div><input type="range" min={0} max={100000} step={1000} value={mil} onChange={function(x){sMil(Number(x.target.value))}} style={{width:"100%"}}/></div><div style={{marginBottom:16}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.06em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Notes</div><textarea value={notes} onChange={function(x){setNotes(x.target.value)}} placeholder="Timeline, trade-in info..." rows={2} style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:10,color:"#e0e0e0",fontSize:14,fontFamily:"Outfit,sans-serif",outline:"none",boxSizing:"border-box",resize:"vertical",minHeight:48}}/></div><div style={{display:"flex",gap:10}}><button disabled={!ok||submitting} onClick={async function(){await onSubmit({name:name,phone:phone,email:email,notes:notes,years:fy,models:fm,motors:fmo,batteries:fb,colors:fc,interiors:fi,maxBudget:bud<120000?bud:null,maxMileage:mil<100000?mil:null});setDone(true)}} style={{flex:1,padding:"12px",background:ok?"#5ab5d4":"rgba(255,255,255,0.1)",border:"none",borderRadius:6,color:ok?"#0c0c0c":"rgba(255,255,255,0.3)",fontSize:14,fontWeight:600,cursor:ok?"pointer":"default",fontFamily:"Outfit,sans-serif",opacity:ok?1:0.4}}>{submitting?"Sending...":"Notify Me"}</button><button onClick={onClose} style={{padding:"12px 20px",background:"transparent",border:"1.5px solid rgba(255,255,255,0.1)",borderRadius:6,color:"rgba(255,255,255,0.4)",fontSize:13,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Cancel</button></div></div></div>);
 }
 
 // ═══════════════════════════════════════════
@@ -142,29 +142,30 @@ function AdminLogin({onLogin}){
   const [pw,setPw]=useState("");const[err,setErr]=useState(false);
   return(
     <div style={{maxWidth:400,margin:"80px auto",background:"#161616",border:"1px solid #222",borderRadius:12,padding:32,textAlign:"center"}}>
-      <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.15em",color:"#4a6741",textTransform:"uppercase",fontFamily:"'Space Mono',monospace",marginBottom:8}}>Admin Portal</div>
+      <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.15em",color:"#3a6a8a",textTransform:"uppercase",fontFamily:"'Space Mono',monospace",marginBottom:8}}>Admin Portal</div>
       <h2 style={{fontSize:22,fontWeight:300,color:"#f0f0f0",marginBottom:24}}>Big Wave <span style={{fontWeight:700}}>Auto</span></h2>
       <input type="password" value={pw} onChange={e=>{setPw(e.target.value);setErr(false)}} onKeyDown={e=>e.key==="Enter"&&(pw===ADMIN_PASSWORD?onLogin():setErr(true))}
         placeholder="Enter password" style={{...inp,textAlign:"center",marginBottom:12}}/>
       {err&&<div style={{color:"#b57a7a",fontSize:13,marginBottom:12}}>Incorrect password</div>}
-      <button onClick={()=>pw===ADMIN_PASSWORD?onLogin():setErr(true)} style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:8,color:"#e0eadc",fontSize:14,fontWeight:600,cursor:"pointer"}}>Log In</button>
+      <button onClick={()=>pw===ADMIN_PASSWORD?onLogin():setErr(true)} style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#3a6a8a,#2a5a7a)",border:"none",borderRadius:8,color:"#dce8f0",fontSize:14,fontWeight:600,cursor:"pointer"}}>Log In</button>
     </div>
   );
 }
 
-function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,vehicleColumns,onUpload,onDeleteInquiry,onDeleteRequest}){
+function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,vehicleColumns,onUpload,onDeleteInquiry,onDeleteRequest,onLogout}){
   const [tab,setTab]=useState("settings");
   return(
     <div>
       <div style={{padding:"20px 28px",borderBottom:"1px solid #1e1e1e",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div>
-          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.15em",color:"#4a6741",textTransform:"uppercase",fontFamily:"'Space Mono',monospace",marginBottom:2}}>Admin</div>
+          <div style={{fontSize:11,fontWeight:700,letterSpacing:"0.15em",color:"#3a6a8a",textTransform:"uppercase",fontFamily:"'Space Mono',monospace",marginBottom:2}}>Admin</div>
           <h1 style={{fontSize:22,fontWeight:300,margin:0,color:"#f0f0f0"}}>Big Wave <span style={{fontWeight:700}}>Auto</span></h1>
         </div>
         <div style={{display:"flex",gap:6}}>
-          <span style={{background:"#1a2518",color:"#6b9c5a",padding:"4px 10px",borderRadius:12,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{inquiries.length} inquiries</span>
+          <span style={{background:"#1a2230",color:"#5a9cc0",padding:"4px 10px",borderRadius:12,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{inquiries.length} inquiries</span>
           <span style={{background:"#1a1e25",color:"#5a7c9c",padding:"4px 10px",borderRadius:12,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{requests.length} notify</span>
           <span style={{background:"#1e1a25",color:"#9c5a9c",padding:"4px 10px",borderRadius:12,fontSize:12,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{vehicles.length} vehicles</span>
+          <button onClick={onLogout} style={{padding:"4px 14px",background:"transparent",border:"1px solid #333",borderRadius:12,color:"#888",fontSize:11,fontWeight:600,cursor:"pointer",marginLeft:8}}>Log Out</button>
         </div>
       </div>
 
@@ -172,8 +173,8 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
         {[{k:"settings",l:"Settings"},{k:"inventory",l:"Inventory"},{k:"inquiries",l:"Inquiries"},{k:"requests",l:"Notify Requests"}].map(t=>(
           <button key={t.k} onClick={()=>setTab(t.k)} style={{
             flex:1,padding:"13px 10px",background:tab===t.k?"#0f0f0f":"transparent",border:"none",
-            borderBottom:tab===t.k?"2px solid #4a6741":"2px solid transparent",
-            color:tab===t.k?"#e0eadc":"#666",fontSize:12,fontWeight:tab===t.k?600:400,cursor:"pointer",whiteSpace:"nowrap",
+            borderBottom:tab===t.k?"2px solid #3a6a8a":"2px solid transparent",
+            color:tab===t.k?"#dce8f0":"#666",fontSize:12,fontWeight:tab===t.k?600:400,cursor:"pointer",whiteSpace:"nowrap",
           }}>{t.l}</button>
         ))}
       </div>
@@ -194,7 +195,7 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
             ].map(s=>(
               <div key={s.key} style={{marginBottom:20}}>
                 <label style={lb}>{s.label}</label>
-                <span style={{fontSize:16,fontWeight:700,color:"#6b9c5a",fontFamily:"'Space Mono',monospace",display:"block",marginBottom:6}}>
+                <span style={{fontSize:16,fontWeight:700,color:"#5a9cc0",fontFamily:"'Space Mono',monospace",display:"block",marginBottom:6}}>
                   {s.fmt(settings[s.key])}
                 </span>
                 <input type="range" min={s.min} max={s.max} step={s.step} value={settings[s.key]}
@@ -207,9 +208,9 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
               <div style={{display:"flex",gap:6}}>
                 {["MMR","BuyNow"].map(o=>(
                   <button key={o} onClick={()=>onSettingsChange({...settings,costBasis:o})} style={{
-                    flex:1,padding:"8px",borderRadius:6,border:settings.costBasis===o?"2px solid #4a6741":"1.5px solid #222",
-                    background:settings.costBasis===o?"linear-gradient(135deg,#4a6741,#3a5431)":"transparent",
-                    color:settings.costBasis===o?"#e0eadc":"#777",fontSize:12,fontWeight:600,cursor:"pointer",
+                    flex:1,padding:"8px",borderRadius:6,border:settings.costBasis===o?"2px solid #3a6a8a":"1.5px solid #222",
+                    background:settings.costBasis===o?"linear-gradient(135deg,#3a6a8a,#2a5a7a)":"transparent",
+                    color:settings.costBasis===o?"#dce8f0":"#777",fontSize:12,fontWeight:600,cursor:"pointer",
                   }}>{o==="BuyNow"?"Buy Now":o}</button>
                 ))}
               </div>
@@ -231,21 +232,21 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
                 {vehicles.length>0?`Re-upload CSV (${vehicles.length} loaded)`:"Upload CSV"}
                 <input type="file" accept=".csv,.tsv,.txt" onChange={onUpload} style={{display:"none"}}/>
               </label>
-              {vehicles.length>0&&<button onClick={async()=>{try{await supabase.from("inventory").delete().neq("id",0);await supabase.from("inventory").insert([{vehicles:vehicles,columns:vehicleColumns,uploaded_at:new Date().toISOString()}]);alert("Inventory saved!");}catch(err){alert("Save failed: "+err.message);}}} style={{padding:"10px 24px",background:"linear-gradient(135deg,#4a6741,#3a5431)",border:"none",borderRadius:10,color:"#e0eadc",fontSize:13,fontWeight:600,cursor:"pointer"}}>Save Changes</button>}
+              {vehicles.length>0&&<button onClick={async()=>{try{await supabase.from("inventory").delete().neq("id",0);await supabase.from("inventory").insert([{vehicles:vehicles,columns:vehicleColumns,uploaded_at:new Date().toISOString()}]);alert("Inventory saved!");}catch(err){alert("Save failed: "+err.message);}}} style={{padding:"10px 24px",background:"linear-gradient(135deg,#3a6a8a,#2a5a7a)",border:"none",borderRadius:10,color:"#dce8f0",fontSize:13,fontWeight:600,cursor:"pointer"}}>Save Changes</button>}
             </div>
             {vehicles.length>0&&(
               <div style={{overflowX:"auto",borderRadius:10,border:"1px solid #222",maxHeight:"70vh",overflowY:"auto"}}>
                 <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
                   <thead style={{position:"sticky",top:0,zIndex:10}}><tr>
                     <th style={{padding:"8px 6px",background:"#1a1a1a",borderBottom:"2px solid #333",textAlign:"center",color:"#666",fontWeight:600,fontSize:10,width:40}}>#</th>
-                    {vehicleColumns.map(c=><th key={c} style={{padding:"8px 10px",background:"#1a1a1a",borderBottom:"2px solid #333",textAlign:"left",color:"#8a9a7e",fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",minWidth:80}}>{c}</th>)}
+                    {vehicleColumns.map(c=><th key={c} style={{padding:"8px 10px",background:"#1a1a1a",borderBottom:"2px solid #333",textAlign:"left",color:"#7a9ab0",fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap",minWidth:80}}>{c}</th>)}
                     <th style={{padding:"8px 6px",background:"#1a1a1a",borderBottom:"2px solid #333",width:50}}></th>
                   </tr></thead>
                   <tbody>
                     {vehicles.map((r,i)=><tr key={i} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
                       <td style={{padding:"4px 6px",borderBottom:"1px solid #1a1a1a",color:"#555",textAlign:"center",fontSize:10}}>{i+1}</td>
                       {vehicleColumns.map(c=><td key={c} style={{padding:"2px 4px",borderBottom:"1px solid #1a1a1a"}}>
-                        <input value={r[c]||""} onChange={e=>{const nv=[...vehicles];nv[i]={...nv[i],[c]:e.target.value};if(nv[i]._enriched){nv[i]._enriched=false;enrichVehicle(nv[i]);}setVehicles(nv);}} style={{width:"100%",padding:"4px 6px",background:"transparent",border:"1px solid transparent",borderRadius:3,color:"#ccc",fontSize:11,outline:"none",fontFamily:"'DM Sans',sans-serif",boxSizing:"border-box",minWidth:60}} onFocus={e=>{e.target.style.border="1px solid #4a6741";e.target.style.background="rgba(255,255,255,0.04)";}} onBlur={e=>{e.target.style.border="1px solid transparent";e.target.style.background="transparent";}}/>
+                        <input value={r[c]||""} onChange={e=>{const nv=[...vehicles];nv[i]={...nv[i],[c]:e.target.value};if(nv[i]._enriched){nv[i]._enriched=false;enrichVehicle(nv[i]);}setVehicles(nv);}} style={{width:"100%",padding:"4px 6px",background:"transparent",border:"1px solid transparent",borderRadius:3,color:"#ccc",fontSize:11,outline:"none",fontFamily:"'DM Sans',sans-serif",boxSizing:"border-box",minWidth:60}} onFocus={e=>{e.target.style.border="1px solid #3a6a8a";e.target.style.background="rgba(255,255,255,0.04)";}} onBlur={e=>{e.target.style.border="1px solid transparent";e.target.style.background="transparent";}}/>
                       </td>)}
                       <td style={{padding:"2px 4px",borderBottom:"1px solid #1a1a1a",textAlign:"center"}}><button onClick={()=>{const nv=vehicles.filter((_,j)=>j!==i);setVehicles(nv);}} style={{padding:"3px 8px",background:"#251a1a",border:"none",borderRadius:4,color:"#b57a7a",fontSize:9,fontWeight:600,cursor:"pointer"}}>✕</button></td>
                     </tr>)}
@@ -468,6 +469,7 @@ export default function App(){
         vehicles={vehicles} vehicleColumns={vehicleColumns} onUpload={handleUpload}
         onDeleteInquiry={async(id,i)=>{if(id)await supabase.from("inquiries").delete().eq("id",id);setAdminInquiries(p=>p.filter((_,j)=>j!==i));}}
         onDeleteRequest={async(id,i)=>{if(id)await supabase.from("requests").delete().eq("id",id);setAdminRequests(p=>p.filter((_,j)=>j!==i));}}
+        onLogout={()=>setAdminLoggedIn(false)}
       />}
 
       {/* CUSTOMER */}
@@ -476,8 +478,8 @@ export default function App(){
           <div style={{padding:"20px 28px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
             <div style={{maxWidth:1200,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"baseline",gap:10}}>
-                <h1 style={{fontSize:22,fontWeight:300,letterSpacing:"-0.02em",margin:0}}>Rivian <span style={{fontStyle:"italic",fontWeight:300,color:"#58c88a"}}>wave</span> <span style={{fontWeight:600}}>report</span></h1>
-                {vehicles.length>0&&<span style={{fontSize:12,fontWeight:500,color:"#58c88a",background:"rgba(72,160,120,0.1)",padding:"3px 10px",borderRadius:6}}>{processed.length} available</span>}
+                <h1 style={{fontSize:26,fontWeight:300,letterSpacing:"-0.02em",margin:0}}>Rivian <span style={{fontFamily:"'DM Sans',serif",fontWeight:200,letterSpacing:"0.08em",textTransform:"uppercase",fontSize:20,color:"#5ab5d4",opacity:0.8}}>WAVE</span> <span style={{fontWeight:600}}>Report</span></h1>
+                {vehicles.length>0&&<span style={{fontSize:12,fontWeight:500,color:"#5ab5d4",background:"rgba(90,180,212,0.1)",padding:"3px 10px",borderRadius:6}}>{processed.length} available</span>}
               </div>
             </div>
           </div>
@@ -486,7 +488,7 @@ export default function App(){
             {loadingInventory?(
               <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>Loading inventory...</div></div>
             ):vehicles.length===0?(
-              <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles available right now</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
+              <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles available right now</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#5ab5d4",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
             ):(
               <div style={{display:"grid",gridTemplateColumns:"230px 1fr",gap:24}}>
                 <div style={{position:"sticky",top:16,alignSelf:"start"}}>
@@ -498,15 +500,15 @@ export default function App(){
                     <FilterPills label="Battery" options={filterOptions.batteries} sel={filters.batteries} onToggle={function(v){toggle("batteries",v)}} counts={filterCounts.batteries}/>
                     <FilterPills label="Motor" options={filterOptions.motors} sel={filters.motors} onToggle={function(v){toggle("motors",v)}} counts={filterCounts.motors}/>
                     <FilterPills label="Color" options={filterOptions.colors} sel={filters.colors} onToggle={function(v){toggle("colors",v)}} counts={filterCounts.colors}/>
-                    <div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:14,fontWeight:500,color:"#58c88a",marginBottom:6}}>{maxPrice>=120000?"No limit":"Up to $"+maxPrice.toLocaleString()}</div><input type="range" min={30000} max={120000} step={1000} value={maxPrice} onChange={function(e){setMaxPrice(Number(e.target.value))}} style={{width:"100%"}}/></div>
-                    <div style={{marginBottom:14}}><div style={{fontSize:10,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Sort</div><select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{width:"100%",padding:"8px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,color:"rgba(255,255,255,0.6)",fontSize:12,outline:"none",fontFamily:"Outfit,sans-serif"}}><option value="retail_asc">Price: Low to High</option><option value="retail_desc">Price: High to Low</option><option value="miles_asc">Mileage: Low to High</option></select></div>
+                    <div style={{marginBottom:14}}><div style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Max Budget</div><div style={{fontSize:14,fontWeight:500,color:"#5ab5d4",marginBottom:6}}>{maxPrice>=120000?"No limit":"Up to $"+maxPrice.toLocaleString()}</div><input type="range" min={30000} max={120000} step={1000} value={maxPrice} onChange={function(e){setMaxPrice(Number(e.target.value))}} style={{width:"100%"}}/></div>
+                    <div style={{marginBottom:14}}><div style={{fontSize:11,fontWeight:500,letterSpacing:"0.08em",textTransform:"uppercase",color:"rgba(255,255,255,0.3)",marginBottom:5}}>Sort</div><select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{width:"100%",padding:"8px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,color:"rgba(255,255,255,0.6)",fontSize:12,outline:"none",fontFamily:"Outfit,sans-serif"}}><option value="retail_asc">Price: Low to High</option><option value="retail_desc">Price: High to Low</option><option value="miles_asc">Mileage: Low to High</option></select></div>
                     {hasFilters?<button onClick={function(){setFilters({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]})}} style={{width:"100%",padding:"8px",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:6,color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif",fontWeight:500}}>Clear All Filters</button>:null}
                   </div>
                 </div>
 
                 <div>
                   {processed.length===0?(
-                    <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles match your filters</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
+                    <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles match your filters</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#5ab5d4",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
                   ):(
                     <div>
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
@@ -514,14 +516,14 @@ export default function App(){
                           var v=item.vehicle,ret=item.costs.retail;
                           var mi=v["Odometer Value"]?parseInt(v["Odometer Value"]):null;
                           return(
-                            <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{display:"flex",alignItems:"center",padding:"10px 16px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:6,marginBottom:2,cursor:"pointer",transition:"all .15s",gap:14}}>
+                            <div key={v.Vin} onClick={function(){setInquiryTarget({vehicle:v,retail:ret})}} style={{display:"flex",alignItems:"center",padding:"14px 20px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:6,marginBottom:2,cursor:"pointer",transition:"all .15s",gap:14}}>
                               <img src={v.Model==="R1S"?R1S_IMG:R1T_IMG} alt={v.Model} style={{width:80,height:"auto",flexShrink:0,opacity:0.85}}/>
                               <div style={{flex:1,minWidth:0}}>
                                 <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:1}}>
-                                  <span style={{fontSize:14,fontWeight:600,color:"#fff"}}>{v.Year} {v.Model}</span>
-                                  <span style={{fontSize:12,fontWeight:400,color:"rgba(255,255,255,0.4)"}}>{v._cleanTrim||v.Trim}</span>
+                                  <span style={{fontSize:16,fontWeight:600,color:"#fff"}}>{v.Year} {v.Model}</span>
+                                  <span style={{fontSize:14,fontWeight:400,color:"rgba(255,255,255,0.4)"}}>{v._cleanTrim||v.Trim}</span>
                                 </div>
-                                <div style={{display:"flex",alignItems:"center",gap:8,fontSize:11,color:"rgba(255,255,255,0.35)"}}>
+                                <div style={{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"rgba(255,255,255,0.35)"}}>
                                   {mi!==null&&<span>{mi.toLocaleString()} mi</span>}
                                   {v.Motor&&<><span style={{color:"rgba(255,255,255,0.15)"}}>·</span><span>{v.Motor}-Motor</span></>}
                                   {v.Battery&&<><span style={{color:"rgba(255,255,255,0.15)"}}>·</span><span>{v.Battery}</span></>}
@@ -532,16 +534,16 @@ export default function App(){
                                 </div>
                               </div>
                               <div style={{textAlign:"right",flexShrink:0,marginRight:12}}>
-                                <div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontSize:14,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round(ret/100)*100).toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>{"± $"+(settings.priceRange>=1000?((settings.priceRange/1000)+"k"):settings.priceRange)}</span></div>
+                                <div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontSize:17,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round(ret/100)*100).toLocaleString()}</span><span style={{fontSize:13,color:"rgba(255,255,255,0.25)"}}>{"± $"+(settings.priceRange>=1000?((settings.priceRange/1000)+"k"):settings.priceRange)}</span></div>
                               </div>
-                              <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(72,160,120,0.4)",borderRadius:6,color:"#58c88a",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
+                              <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"7px 16px",background:"transparent",border:"1.5px solid rgba(90,180,212,0.4)",borderRadius:6,color:"#5ab5d4",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap"}}>Get Details</button>
                             </div>
                           );
                         })}
                       </div>
                       <div style={{textAlign:"center",padding:"36px 20px",marginTop:10}}>
                         <div style={{fontSize:14,color:"rgba(255,255,255,0.35)",marginBottom:14}}>Don't see your perfect spec?</div>
-                        <button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#58c88a",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button>
+                        <button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#5ab5d4",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button>
                       </div>
                     </div>
                   )}
