@@ -27,6 +27,9 @@ const FEATURES = ["All-Terrain Package","Dynamic Glass Roof","STEALTH PPF","Fron
 
 const ADMIN_PASSWORD = "bigwave2025";
 
+// Approximate distance from 53089 (Menomonee Falls, WI) to zip prefixes
+const ZIP_DISTANCES={"530":0,"531":20,"532":40,"535":80,"534":60,"537":100,"539":120,"540":150,"541":160,"543":180,"544":200,"545":190,"546":220,"547":250,"548":280,"549":300,"600":90,"601":95,"602":100,"604":110,"606":90,"609":130,"610":140,"612":200,"613":250,"614":280,"617":350,"618":350,"619":380,"480":350,"481":360,"482":370,"483":380,"484":400,"485":420,"486":450,"487":470,"489":500,"490":250,"491":280,"493":300,"494":340,"496":400,"497":450,"550":330,"551":340,"553":350,"554":340,"556":380,"557":410,"558":480,"559":500,"100":870,"101":870,"104":870,"070":850,"080":830,"190":810,"191":810,"200":820,"201":820,"206":840,"207":830,"210":780,"211":790,"220":800,"221":810,"230":850,"300":800,"301":790,"303":810,"305":820,"310":820,"330":1350,"331":1360,"334":1300,"336":1300,"337":1350,"339":1400,"400":470,"401":480,"410":500,"430":380,"432":400,"440":530,"441":530,"443":560,"450":430,"452":460,"453":470,"460":280,"461":300,"462":310,"463":330,"464":350,"466":380,"468":400,"500":320,"502":330,"503":340,"510":450,"520":250,"527":200,"550":350,"554":340,"570":520,"580":600,"590":700,"630":350,"631":360,"640":380,"641":400,"644":430,"650":310,"660":620,"662":640,"670":700,"680":500,"690":550,"700":1050,"701":1060,"703":1000,"710":1020,"730":1000,"731":1020,"733":1050,"740":1050,"750":1060,"751":1060,"752":1080,"760":1100,"770":1150,"773":1160,"780":1100,"790":1300,"800":1050,"801":1050,"802":1060,"803":1080,"810":1100,"820":1150,"831":1200,"840":1400,"841":1410,"850":1750,"852":1750,"853":1770,"860":1780,"900":2050,"902":2050,"906":2020,"910":2080,"920":2050,"921":2060,"930":2100,"940":2150,"941":2150,"943":2130,"945":2120,"950":2120,"970":2100,"971":2100,"980":2100,"981":2100,"982":2100,"983":2120,"984":2150};
+
 const DEFAULT_SETTINGS = {
   transportPerMile: 1,
   detailing: 400,
@@ -317,6 +320,10 @@ export default function App(){
   const [adminInquiries,setAdminInquiries]=useState([]);
   const [adminRequests,setAdminRequests]=useState([]);
   const [loadingInventory,setLoadingInventory]=useState(true);
+  const [customerZip,setCustomerZip]=useState("");
+
+  const deliveryMiles=customerZip.length>=3?ZIP_DISTANCES[customerZip.substring(0,3)]||null:null;
+  const deliveryCost=deliveryMiles!==null?Math.round(deliveryMiles*0.9):null;
 
   useEffect(()=>{
     const check=()=>setMode(window.location.hash==="#admin"?"admin":"customer");
@@ -497,6 +504,7 @@ export default function App(){
                     <FilterPills label="Color" options={filterOptions.colors} sel={filters.colors} onToggle={function(v){toggle("colors",v)}} counts={filterCounts.colors}/>
                     <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Budget</span><span style={{fontSize:13,fontWeight:500,color:"#5ab5d4",minWidth:70}}>{maxPrice>=120000?"Any":"$"+maxPrice.toLocaleString()}</span><input type="range" min={30000} max={120000} step={1000} value={maxPrice} onChange={function(e){setMaxPrice(Number(e.target.value))}} style={{width:100}}/></div>
                     <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Sort</span><select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{padding:"4px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,color:"rgba(255,255,255,0.6)",fontSize:12,outline:"none",fontFamily:"Outfit,sans-serif"}}><option value="retail_asc">Price ↑</option><option value="retail_desc">Price ↓</option><option value="miles_asc">Miles ↑</option></select></div>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Your Zip</span><input value={customerZip} onChange={function(e){setCustomerZip(e.target.value.replace(/\D/g,"").slice(0,5))}} placeholder="ZIP" maxLength={5} style={{width:60,padding:"4px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,color:"#fff",fontSize:13,outline:"none",fontFamily:"DM Sans,sans-serif",textAlign:"center"}}/>{deliveryCost!==null?<span style={{fontSize:11,color:"rgba(255,255,255,0.3)"}}>~{deliveryMiles.toLocaleString()} mi · ${deliveryCost.toLocaleString()} transport</span>:customerZip.length>=3?<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>call for quote</span>:null}</div>
                     {hasFilters?<button onClick={function(){setFilters({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]})}} style={{padding:"4px 12px",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Clear</button>:null}
                   </div>
                 </div>
@@ -519,8 +527,10 @@ export default function App(){
                               <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"rgba(255,255,255,0.3)",width:60,flexShrink:0}}>{v.Motor?v.Motor:""}</span>
                               <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"rgba(255,255,255,0.3)",width:60,flexShrink:0}}>{v.Battery||""}</span>
                               <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"rgba(255,255,255,0.3)",flex:1,minWidth:0}}><Dot c={v["Exterior Color"]} size={8}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v["Exterior Color"]}</span><span style={{color:"rgba(255,255,255,0.12)",margin:"0 2px"}}>/</span><Dot c={v["Interior Color"]} size={8}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v["Interior Color"]}</span></span>
-                              <span style={{fontSize:15,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif",flexShrink:0,width:90,textAlign:"right"}}>{"$"+(Math.round(ret/100)*100).toLocaleString()}</span>
-                              <span style={{fontSize:11,color:"rgba(255,255,255,0.2)",flexShrink:0,width:50}}>{"± $"+(settings.priceRange>=1000?((settings.priceRange/1000)+"k"):settings.priceRange)}</span>
+                              <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                                <span style={{fontSize:15,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round(ret/50)*50).toLocaleString()}</span>
+                                {deliveryCost!==null?<><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>+</span><span style={{fontSize:12,fontWeight:500,color:"rgba(255,255,255,0.4)"}}>{"$"+deliveryCost.toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}> = </span><span style={{fontSize:15,fontWeight:700,color:"#5ab5d4",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round((ret+deliveryCost)/50)*50).toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.2)",marginLeft:3}}>+TTL</span></>:customerZip.length>=3&&deliveryMiles===null?<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>+transport +TTL</span>:<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>enter zip for delivered price</span>}
+                              </div>
                               <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"4px 12px",background:"transparent",border:"1px solid rgba(90,180,212,0.3)",borderRadius:4,color:"#5ab5d4",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap",flexShrink:0}}>Get Details</button>
                             </div>
                           );
