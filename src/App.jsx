@@ -422,6 +422,9 @@ export default function App(){
     });
     const deduped=Object.values(vinMap);
     let f=deduped.filter(v=>{
+      const _mmr=parseFloat(v.MMR)||0;
+      const _bn=parseFloat(v["Buy Now Price"])||0;
+      if(_mmr>0&&_bn>0&&_bn>_mmr+2000)return false;
       if(filters.years.length&&!filters.years.includes(v.Year))return false;
       if(filters.models.length&&!filters.models.includes(v.Model))return false;
       if(filters.trims.length&&!filters.trims.includes(v._cleanTrim))return false;
