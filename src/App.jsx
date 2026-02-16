@@ -316,7 +316,7 @@ export default function App(){
   const [vehicleColumns,setVehicleColumns]=useState([]);
   const [settings,setSettings]=useState({...DEFAULT_SETTINGS});
   const [filters,setFilters]=useState({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]});
-  const [sortBy,setSortBy]=useState("retail_asc");
+  const [sortBy,setSortBy]=useState("miles_asc");
   const [maxPrice,setMaxPrice]=useState(120000);
   const [maxMileage,setMaxMileage]=useState(100000);
   const [showNotify,setShowNotify]=useState(false);
