@@ -318,6 +318,7 @@ export default function App(){
   const [filters,setFilters]=useState({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]});
   const [sortBy,setSortBy]=useState("retail_asc");
   const [maxPrice,setMaxPrice]=useState(120000);
+  const [maxMileage,setMaxMileage]=useState(100000);
   const [showNotify,setShowNotify]=useState(false);
   const [inquiryTarget,setInquiryTarget]=useState(null);
   const [submitting,setSubmitting]=useState(false);
@@ -397,12 +398,30 @@ export default function App(){
 
   const filterOptions=useMemo(()=>{
     const u=k=>[...new Set(vehicles.map(v=>v[k]).filter(Boolean))].sort();
-    const cleanTrims=[...new Set(vehicles.map(v=>v._cleanTrim).filter(Boolean))].sort();
+    const cleanTrims=[...new Set(vehicles.map(v=>v._cleanTrim).filter(Boolean))].sort().filter(t=>t.includes("Launch")||t.includes("Adventure"));
     return{years:u("Year"),models:u("Model"),trims:cleanTrims,batteries:u("Battery"),motors:u("Motor"),colors:u("Exterior Color")};
   },[vehicles]);
 
   const processed=useMemo(()=>{
-    let f=vehicles.filter(v=>{
+    // Deduplicate by VIN - merge auction + buy-now into one row
+    const vinMap={};
+    vehicles.forEach(v=>{
+      const vin=v.Vin;
+      if(!vin){return;}
+      if(!vinMap[vin]){vinMap[vin]={...v};}
+      else{
+        const existing=vinMap[vin];
+        const eMMR=parseFloat(existing.MMR)||0;
+        const esBN=parseFloat(existing["Buy Now Price"])||0;
+        const nMMR=parseFloat(v.MMR)||0;
+        const nBN=parseFloat(v["Buy Now Price"])||0;
+        if(nMMR>eMMR)existing.MMR=v.MMR;
+        if(nBN>0&&(esBN===0||nBN<esBN))existing["Buy Now Price"]=v["Buy Now Price"];
+        Object.keys(v).forEach(k=>{if(!existing[k]&&v[k])existing[k]=v[k];});
+      }
+    });
+    const deduped=Object.values(vinMap);
+    let f=deduped.filter(v=>{
       if(filters.years.length&&!filters.years.includes(v.Year))return false;
       if(filters.models.length&&!filters.models.includes(v.Model))return false;
       if(filters.trims.length&&!filters.trims.includes(v._cleanTrim))return false;
@@ -413,6 +432,7 @@ export default function App(){
     });
     let wc=f.map(v=>{const c=calcCosts(v,settings);return{vehicle:v,costs:c};});
     if(maxPrice<120000)wc=wc.filter(i=>i.costs.retail<=maxPrice);
+    if(maxMileage<100000)wc=wc.filter(i=>(parseInt(i.vehicle["Odometer Value"])||0)<=maxMileage);
     wc.sort((a,b)=>{
       switch(sortBy){
         case"retail_asc":return a.costs.retail-b.costs.retail;
@@ -422,7 +442,7 @@ export default function App(){
       }
     });
     return wc;
-  },[vehicles,filters,settings,sortBy,maxPrice]);
+  },[vehicles,filters,settings,sortBy,maxPrice,maxMileage]);
 
   const filterCounts=useMemo(()=>{
     const c=(key,csvKey)=>{
@@ -509,7 +529,7 @@ export default function App(){
           <div style={{padding:"20px 28px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
             <div style={{maxWidth:1200,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"baseline",gap:10}}>
-                <h1 style={{fontSize:26,fontWeight:300,letterSpacing:"-0.02em",margin:0}}>Rivian <span style={{fontFamily:"'DM Sans',serif",fontWeight:200,letterSpacing:"0.08em",textTransform:"uppercase",fontSize:20,color:"#5ab5d4",opacity:0.8}}>WAVE</span> <span style={{fontWeight:600}}>Report</span></h1>
+                <h1 style={{fontSize:26,fontWeight:300,letterSpacing:"-0.02em",margin:0}}><span style={{fontWeight:700}}>BIG WAVE</span> Rivian Report</h1>
                 {vehicles.length>0&&<span style={{fontSize:12,fontWeight:500,color:"#5ab5d4",background:"rgba(90,180,212,0.1)",padding:"3px 10px",borderRadius:6}}>{processed.length} available</span>}
               </div>
             </div>
@@ -529,10 +549,11 @@ export default function App(){
                     <FilterPills label="Battery" options={filterOptions.batteries} sel={filters.batteries} onToggle={function(v){toggle("batteries",v)}} counts={filterCounts.batteries}/>
                     <FilterPills label="Motor" options={filterOptions.motors} sel={filters.motors} onToggle={function(v){toggle("motors",v)}} counts={filterCounts.motors}/>
                     <FilterPills label="Color" options={filterOptions.colors} sel={filters.colors} onToggle={function(v){toggle("colors",v)}} counts={filterCounts.colors}/>
-                    <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
                       <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Budget</span><span style={{fontSize:13,fontWeight:500,color:"#5ab5d4",minWidth:70}}>{maxPrice>=120000?"Any":"$"+maxPrice.toLocaleString()}</span><input type="range" min={30000} max={120000} step={1000} value={maxPrice} onChange={function(e){setMaxPrice(Number(e.target.value))}} style={{width:100}}/></div>
-                      <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Sort</span><select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{padding:"4px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,color:"rgba(255,255,255,0.6)",fontSize:12,outline:"none",fontFamily:"Outfit,sans-serif"}}><option value="retail_asc">Price ↑</option><option value="retail_desc">Price ↓</option><option value="miles_asc">Miles ↑</option></select></div>
-                      <div style={{display:"flex",alignItems:"center",gap:6,background:"rgba(90,180,212,0.06)",padding:"4px 10px",borderRadius:4,border:"1px solid rgba(90,180,212,0.15)"}}><span style={{fontSize:11,fontWeight:600,color:"#5ab5d4",textTransform:"uppercase",letterSpacing:"0.06em"}}>Your Zip</span><input value={customerZip} onChange={function(e){setCustomerZip(e.target.value.replace(/\D/g,"").slice(0,5))}} placeholder="ZIP" maxLength={5} style={{width:56,padding:"3px 6px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:4,color:"#fff",fontSize:13,fontWeight:600,outline:"none",fontFamily:"DM Sans,sans-serif",textAlign:"center"}}/>{deliveryCost!==null?<span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>~{deliveryMiles.toLocaleString()} mi · ${deliveryCost.toLocaleString()}</span>:customerZip.length>=3?<span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>call for quote</span>:null}</div>
+
+                  <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Mileage</span><span style={{fontSize:13,fontWeight:500,color:"#5ab5d4",minWidth:70}}>{maxMileage>=100000?"Any":maxMileage.toLocaleString()+" mi"}</span><input type="range" min={0} max={100000} step={5000} value={maxMileage} onChange={function(e){setMaxMileage(Number(e.target.value))}} style={{width:100}}/></div>
+                      <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(90,180,212,0.06)",padding:"4px 10px",borderRadius:4,border:"1px solid rgba(90,180,212,0.15)",alignSelf:"flex-start"}}><span style={{fontSize:11,fontWeight:600,color:"#5ab5d4",textTransform:"uppercase",letterSpacing:"0.06em"}}>Your Zip</span><input value={customerZip} onChange={function(e){setCustomerZip(e.target.value.replace(/\D/g,"").slice(0,5))}} placeholder="ZIP" maxLength={5} style={{width:56,padding:"3px 6px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:4,color:"#fff",fontSize:13,fontWeight:600,outline:"none",fontFamily:"DM Sans,sans-serif",textAlign:"center"}}/>{deliveryCost!==null?<span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>~{deliveryMiles.toLocaleString()} mi · ${deliveryCost.toLocaleString()}</span>:customerZip.length>=3?<span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>call for quote</span>:null}</div>
                       {hasFilters?<button onClick={function(){setFilters({years:[],models:[],trims:[],batteries:[],motors:[],colors:[]})}} style={{padding:"4px 12px",background:"transparent",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,color:"rgba(255,255,255,0.3)",fontSize:11,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Clear</button>:null}
                     </div>
                 </div>
@@ -542,7 +563,10 @@ export default function App(){
                     <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles match your filters</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#5ab5d4",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
                   ):(
                     <div>
-                      <div style={{display:"flex",flexDirection:"column",gap:1}}>
+                      <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.3)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Sort</span><select value={sortBy} onChange={function(e){setSortBy(e.target.value)}} style={{padding:"4px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:4,color:"rgba(255,255,255,0.6)",fontSize:12,outline:"none",fontFamily:"Outfit,sans-serif"}}><option value="retail_asc">Price ↑</option><option value="retail_desc">Price ↓</option><option value="miles_asc">Miles ↑</option></select></div>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:1}}>
                         {processed.map(function(item){
                           var v=item.vehicle,ret=item.costs.retail;
                           var mi=v["Odometer Value"]?parseInt(v["Odometer Value"]):null;
@@ -552,6 +576,7 @@ export default function App(){
                               <span style={{fontSize:13,color:"rgba(255,255,255,0.35)",width:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flexShrink:0}}>{v._cleanTrim||v.Trim}</span>
                               <span style={{fontSize:12,color:"rgba(255,255,255,0.2)",width:36,flexShrink:0}}>{v.Year}</span>
                               <span style={{fontSize:12,color:"rgba(255,255,255,0.3)",width:70,flexShrink:0}}>{mi!==null?mi.toLocaleString()+" mi":""}</span>
+                <span style={{fontSize:11,color:"rgba(255,255,255,0.25)",width:52,flexShrink:0,fontFamily:"'Space Mono',monospace"}}>{v.Vin?v.Vin.slice(-6):""}</span>
                               <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"rgba(255,255,255,0.3)",width:60,flexShrink:0}}>{v.Motor?v.Motor:""}</span>
                               <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"rgba(255,255,255,0.3)",width:60,flexShrink:0}}>{v.Battery||""}</span>
                               <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"rgba(255,255,255,0.3)",flex:1,minWidth:0}}><Dot c={v["Exterior Color"]} size={8}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v["Exterior Color"]}</span><span style={{color:"rgba(255,255,255,0.12)",margin:"0 2px"}}>/</span><Dot c={v["Interior Color"]} size={8}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v["Interior Color"]}</span></span>
