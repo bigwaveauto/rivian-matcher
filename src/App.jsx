@@ -155,6 +155,16 @@ function AdminLogin({onLogin}){
 
 function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,vehicleColumns,onUpload,onDeleteInquiry,onDeleteRequest,onLogout}){
   const [tab,setTab]=useState("settings");
+  const [scoutListings,setScoutListings]=useState([]);
+  const [scoutLoading,setScoutLoading]=useState(false);
+  const loadScout=async()=>{
+    setScoutLoading(true);
+    try{
+      const r=await fetch("https://nqkwurvdwfzpueapagr.supabase.co/rest/v1/marketplace_listings?order=created_at.desc&limit=500",{headers:{"apikey":"sb_publishable_2c9zDnwfZZZlziDs_EAPyQ_zrJOWMB7"}});
+      if(r.ok){const d=await r.json();setScoutListings(d);}
+    }catch(e){console.error(e);}
+    setScoutLoading(false);
+  };
   return(
     <div>
       <div style={{padding:"20px 28px",borderBottom:"1px solid #1e1e1e",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -171,7 +181,7 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
       </div>
 
       <div style={{display:"flex",borderBottom:"1px solid #1e1e1e",background:"#111",overflowX:"auto"}}>
-        {[{k:"settings",l:"Settings"},{k:"inventory",l:"Inventory"},{k:"inquiries",l:"Inquiries"},{k:"requests",l:"Notify Requests"}].map(t=>(
+        {[{k:"settings",l:"Settings"},{k:"inventory",l:"Inventory"},{k:"inquiries",l:"Inquiries"},{k:"requests",l:"Notify Requests"},{k:"scout",l:"Scout"}].map(t=>(
           <button key={t.k} onClick={()=>setTab(t.k)} style={{
             flex:1,padding:"13px 10px",background:tab===t.k?"#0f0f0f":"transparent",border:"none",
             borderBottom:tab===t.k?"2px solid #3a6a8a":"2px solid transparent",
@@ -278,7 +288,62 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
         )}
 
         {/* NOTIFY REQUESTS */}
-        {tab==="requests"&&(requests.length===0?
+        {tab==="scout"&&<div style={{padding:"20px 28px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <div style={{fontSize:14,fontWeight:700,color:"#ccc"}}>Marketplace Scout</div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={loadScout} style={{padding:"8px 16px",background:"linear-gradient(135deg,#3a6a8a,#2a5a7a)",border:"none",borderRadius:6,color:"#dce8f0",fontSize:12,fontWeight:600,cursor:"pointer"}}>{scoutLoading?"Loading...":"Refresh Listings"}</button>
+              <button onClick={async()=>{if(confirm("Delete all scout listings?")){await fetch("https://nqkwurvdwfzpueapagr.supabase.co/rest/v1/marketplace_listings?id=gt.0",{method:"DELETE",headers:{"apikey":"sb_publishable_2c9zDnwfZZZlziDs_EAPyQ_zrJOWMB7","Authorization":"Bearer sb_publishable_2c9zDnwfZZZlziDs_EAPyQ_zrJOWMB7"}});loadScout();}}} style={{padding:"8px 16px",background:"#251a1a",border:"none",borderRadius:6,color:"#b57a7a",fontSize:12,fontWeight:600,cursor:"pointer"}}>Clear All</button>
+            </div>
+          </div>
+          {scoutListings.length===0?<div style={{textAlign:"center",padding:"40px",color:"rgba(255,255,255,0.3)",fontSize:13}}>No listings yet. Use the Big Wave Scout Chrome extension to scrape Facebook Marketplace.</div>:(
+          <div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:16}}>
+              <div style={{background:"rgba(90,181,212,0.06)",borderRadius:6,padding:"10px",border:"1px solid rgba(90,181,212,0.1)"}}>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",marginBottom:4}}>Total Listings</div>
+                <div style={{fontSize:20,fontWeight:700,color:"#5ab5d4"}}>{scoutListings.length}</div>
+              </div>
+              <div style={{background:"rgba(90,181,212,0.06)",borderRadius:6,padding:"10px",border:"1px solid rgba(90,181,212,0.1)"}}>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",marginBottom:4}}>Avg Price</div>
+                <div style={{fontSize:20,fontWeight:700,color:"#5ab5d4"}}>{scoutListings.filter(l=>l.price).length>0?"$"+Math.round(scoutListings.filter(l=>l.price).reduce((s,l)=>s+l.price,0)/scoutListings.filter(l=>l.price).length).toLocaleString():"--"}</div>
+              </div>
+              <div style={{background:"rgba(90,181,212,0.06)",borderRadius:6,padding:"10px",border:"1px solid rgba(90,181,212,0.1)"}}>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",marginBottom:4}}>Lowest Price</div>
+                <div style={{fontSize:20,fontWeight:700,color:"#6b9c5a"}}>{scoutListings.filter(l=>l.price).length>0?"$"+Math.min(...scoutListings.filter(l=>l.price).map(l=>l.price)).toLocaleString():"--"}</div>
+              </div>
+              <div style={{background:"rgba(90,181,212,0.06)",borderRadius:6,padding:"10px",border:"1px solid rgba(90,181,212,0.1)"}}>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",textTransform:"uppercase",marginBottom:4}}>R1S / R1T</div>
+                <div style={{fontSize:20,fontWeight:700,color:"#5ab5d4"}}>{scoutListings.filter(l=>l.model==="R1S").length} / {scoutListings.filter(l=>l.model==="R1T").length}</div>
+              </div>
+            </div>
+            <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                <thead><tr>
+                  {["Year","Model","Price","Mileage","Location","Deal Score","Link","Status"].map(h=><th key={h} style={{padding:"8px 10px",background:"#1a1a1a",borderBottom:"2px solid #333",textAlign:"left",color:"#7a9ab0",fontWeight:700,fontSize:10,textTransform:"uppercase",whiteSpace:"nowrap"}}>{h}</th>)}
+                </tr></thead>
+                <tbody>{scoutListings.sort((a,b)=>(a.price||999999)-(b.price||999999)).map((l,i)=>{
+                  const mmrLookup=vehicles.find(v=>v.Model===l.model&&v.Year===String(l.year));
+                  const mmrVal=mmrLookup?parseFloat(mmrLookup.MMR)||0:0;
+                  const diff=mmrVal&&l.price?(l.price-mmrVal):null;
+                  const pct=mmrVal&&l.price?Math.round(((l.price-mmrVal)/mmrVal)*100):null;
+                  const isDeal=pct!==null&&pct<=-5;
+                  return(<tr key={l.item_id||i} style={{background:isDeal?"rgba(107,156,90,0.08)":"transparent",borderBottom:"1px solid #1a1a1a"}}>
+                    <td style={{padding:"6px 10px",color:"#ddd"}}>{l.year||"?"}</td>
+                    <td style={{padding:"6px 10px",color:"#ddd",fontWeight:600}}>{l.model||"?"}</td>
+                    <td style={{padding:"6px 10px",color:isDeal?"#6b9c5a":"#ddd",fontWeight:700}}>{l.price?"$"+l.price.toLocaleString():"?"}</td>
+                    <td style={{padding:"6px 10px",color:"#999"}}>{l.mileage?l.mileage.toLocaleString()+" mi":"?"}</td>
+                    <td style={{padding:"6px 10px",color:"#777",fontSize:11}}>{l.location||"?"}</td>
+                    <td style={{padding:"6px 10px"}}>{pct!==null?<span style={{color:pct<=0?"#6b9c5a":"#b57a7a",fontWeight:700,fontSize:11}}>{pct>0?"+":""}{pct}% vs MMR</span>:<span style={{color:"#444",fontSize:10}}>no MMR data</span>}</td>
+                    <td style={{padding:"6px 10px"}}>{l.url?<a href={l.url} target="_blank" rel="noopener" style={{color:"#5ab5d4",fontSize:11,textDecoration:"none"}}>View</a>:""}</td>
+                    <td style={{padding:"6px 10px"}}><span style={{fontSize:10,padding:"2px 6px",borderRadius:3,background:l.status==="new"?"rgba(90,181,212,0.15)":l.status==="contacted"?"rgba(107,156,90,0.15)":"rgba(255,255,255,0.05)",color:l.status==="new"?"#5ab5d4":l.status==="contacted"?"#6b9c5a":"#666"}}>{l.status||"new"}</span></td>
+                  </tr>);
+                })}</tbody>
+              </table>
+            </div>
+          </div>
+          )}
+        </div>,
+        tab==="requests"&&(requests.length===0?
           <div style={{background:"#161616",border:"1px solid #222",borderRadius:12,padding:40,textAlign:"center",color:"#666"}}>No notify requests yet.</div>
           :requests.map((r,i)=>(
             <div key={r.id||i} style={{background:"#161616",border:"1px solid #222",borderRadius:10,padding:"14px 18px",marginBottom:8}}>
@@ -545,7 +610,8 @@ export default function App(){
               <div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16,opacity:0.4}}>{"\u26A1"}</div><div style={{fontSize:18,color:"rgba(255,255,255,0.5)",marginBottom:24}}>No vehicles available right now</div><button onClick={function(){setShowNotify(true)}} style={{padding:"12px 32px",background:"#5ab5d4",border:"none",borderRadius:6,color:"#0c0c0c",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif"}}>Notify Me When Available</button></div>
             ):(
               <div>
-                <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8,padding:"12px 18px",marginBottom:16,display:"flex",flexDirection:"column",gap:8}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+              <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8,padding:"12px 18px",display:"flex",flexDirection:"column",gap:8}}>
                     <FilterPills label="Model" options={filterOptions.models} sel={filters.models} onToggle={function(v){toggle("models",v)}} counts={filterCounts.models}/>
                     <FilterPills label="Year" options={filterOptions.years} sel={filters.years} onToggle={function(v){toggle("years",v)}} counts={filterCounts.years}/>
                     <FilterPills label="Trim" options={filterOptions.trims} sel={filters.trims} onToggle={function(v){toggle("trims",v)}} counts={filterCounts.trims}/>
