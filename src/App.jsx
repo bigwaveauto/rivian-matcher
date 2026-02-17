@@ -593,7 +593,7 @@ export default function App(){
 
       {/* CUSTOMER */}
       {mode==="customer"&&(
-        <>
+        <div>
           <div style={{padding:"20px 28px 16px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
             <div style={{maxWidth:1200,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"baseline",gap:10}}>
@@ -651,7 +651,7 @@ export default function App(){
                               <span style={{display:"flex",alignItems:"center",gap:4,fontSize:12,color:"rgba(255,255,255,0.3)",flex:1,minWidth:0}}><Dot c={v["Exterior Color"]} size={8}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v["Exterior Color"]}</span><span style={{color:"rgba(255,255,255,0.12)",margin:"0 2px"}}>/</span><Dot c={v["Interior Color"]} size={8}/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{v["Interior Color"]}</span></span>
                               <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
                                 <span style={{fontSize:15,fontWeight:600,color:"#fff",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round(ret/50)*50).toLocaleString()}</span>
-                                {deliveryCost!==null?<><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>+</span><span style={{fontSize:12,fontWeight:500,color:"rgba(255,255,255,0.4)"}}>{"$"+deliveryCost.toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}> = </span><span style={{fontSize:15,fontWeight:700,color:"#5ab5d4",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round((ret+deliveryCost)/50)*50).toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.2)",marginLeft:3}}>+TTL</span></>:customerZip.length>=3&&deliveryMiles===null?<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>+transport +TTL</span>:<span style={{fontSize:11,color:"rgba(255,255,255,0.15)",fontStyle:"italic"}}>zip above for delivery est.</span>}
+                                {deliveryCost!==null?<span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}>+</span><span style={{fontSize:12,fontWeight:500,color:"rgba(255,255,255,0.4)"}}>{"$"+deliveryCost.toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.25)"}}> = </span><span style={{fontSize:15,fontWeight:700,color:"#5ab5d4",fontFamily:"DM Sans,sans-serif"}}>{"$"+(Math.round((ret+deliveryCost)/50)*50).toLocaleString()}</span><span style={{fontSize:11,color:"rgba(255,255,255,0.2)",marginLeft:3}}>+TTL</span></span>:customerZip.length>=3&&deliveryMiles===null?<span style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>+transport +TTL</span>:<span style={{fontSize:11,color:"rgba(255,255,255,0.15)",fontStyle:"italic"}}>zip above for delivery est.</span>}
                               </div>
                               <button onClick={function(e){e.stopPropagation();setInquiryTarget({vehicle:v,retail:ret})}} style={{padding:"4px 12px",background:"transparent",border:"1px solid rgba(90,180,212,0.3)",borderRadius:4,color:"#5ab5d4",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"Outfit,sans-serif",whiteSpace:"nowrap",flexShrink:0}}>Get Details</button>
                             </div>
@@ -668,7 +668,7 @@ export default function App(){
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
     </div>
   );
