@@ -181,7 +181,7 @@ function AdminDashboard({inquiries,requests,settings,onSettingsChange,vehicles,v
       </div>
 
       <div style={{display:"flex",borderBottom:"1px solid #1e1e1e",background:"#111",overflowX:"auto"}}>
-        {[{k:"settings",l:"Settings"},{k:"inventory",l:"Inventory"},{k:"inquiries",l:"Inquiries"},{k:"requests",l:"Notify Requests"},{k:"scout",l:"Scout"}].map(t=>(
+        {[{k:"settings",l:"Settings"},{k:"inventory",l:"Inventory"},{k:"inquiries",l:"Inquiries"},{k:"requests",l:"Notify"},{k:"scout",l:"Scout"}].map(t=>(
           <button key={t.k} onClick={()=>setTab(t.k)} style={{
             flex:1,padding:"13px 10px",background:tab===t.k?"#0f0f0f":"transparent",border:"none",
             borderBottom:tab===t.k?"2px solid #3a6a8a":"2px solid transparent",
